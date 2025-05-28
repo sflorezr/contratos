@@ -1,0 +1,156 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.2.0'
+    id 'io.spring.dependency-management' version '1.1.4'
+}
+
+group = 'com.empresa'
+version = '1.0.0'
+
+java {
+    sourceCompatibility = '17'
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // Spring Boot Starters
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    
+    // Thymeleaf extras
+    implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity6'
+    implementation 'nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect'
+
+    // Database
+    runtimeOnly 'org.postgresql:postgresql'
+    
+    // Para desarrollo local con H2 (opcional)
+    runtimeOnly 'com.h2database:h2'
+
+    // Security - JWT
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.3'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.3'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.3'
+
+    // Utilities
+    implementation 'org.mapstruct:mapstruct:1.5.5.Final'
+    annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.5.Final'
+    
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
+
+    // JSON Processing
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+    
+    // Commons utilities
+    implementation 'org.apache.commons:commons-lang3'
+    implementation 'commons-io:commons-io:2.11.0'
+    
+    // Web utilities
+    implementation 'org.webjars:bootstrap:5.3.0'
+    implementation 'org.webjars:font-awesome:6.4.0'
+    implementation 'org.webjars:jquery:3.7.0'
+    implementation 'org.webjars:chartjs:4.4.3'
+    implementation 'org.webjars:datatables:1.13.4'
+    
+    // Development
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+
+    // Testing
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation 'com.h2database:h2'
+    testImplementation 'org.testcontainers:junit-jupiter'
+    testImplementation 'org.testcontainers:postgresql'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+// Configuración para MapStruct con Lombok
+tasks.withType(JavaCompile) {
+    options.annotationProcessorPath = configurations.annotationProcessor
+}
+
+// Configuración de compilación
+compileJava {
+    options.compilerArgs += [
+        '-Amapstruct.defaultComponentModel=spring',
+        '-Amapstruct.unmappedTargetPolicy=IGNORE'
+    ]
+}
+
+// Configuración del JAR ejecutable
+jar {
+    enabled = false
+    archiveClassifier = ''
+}
+
+bootJar {
+    enabled = true
+    archiveClassifier = 'boot'
+    mainClass = 'com.empresa.gestioncontratos.GestionContratosApplication'
+}
+
+// Tarea personalizada para ejecutar la aplicación
+task runApp(type: JavaExec) {
+    group = 'application'
+    description = 'Run the Spring Boot application'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.empresa.gestioncontratos.GestionContratosApplication'
+    
+    // Variables de entorno opcionales
+    if (project.hasProperty('profile')) {
+        systemProperty 'spring.profiles.active', project.profile
+    }
+}
+
+// Configuración para diferentes perfiles
+task bootRunDev(type: org.springframework.boot.gradle.tasks.run.BootRun) {
+    group = 'application'
+    description = 'Run the application with dev profile'
+    systemProperty 'spring.profiles.active', 'dev'
+}
+
+task bootRunProd(type: org.springframework.boot.gradle.tasks.run.BootRun) {
+    group = 'application'
+    description = 'Run the application with prod profile'
+    systemProperty 'spring.profiles.active', 'prod'
+}
+
+
+
+// Documentación
+tasks.register('javadocJar', Jar) {
+    dependsOn javadoc
+    archiveClassifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+// Fuentes
+tasks.register('sourcesJar', Jar) {
+    archiveClassifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+artifacts {
+    archives javadocJar
+    archives sourcesJar
+}

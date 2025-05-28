@@ -1,0 +1,14 @@
+// Configuración de repositorios para plugins
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+    }
+}
+
+// Configuración de repositorios para dependencias
+dependencyResolutionManagement {
+    repositories {
+        mavenCentral()
+    }
+}

@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Contratos</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --success: #48bb78;
+            --warning: #ed8936;
+            --danger: #f56565;
+            --info: #4299e1;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+        }
+        
+        .sidebar-menu {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 250px;
+            height: 100vh;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        
+        .sidebar-header {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .sidebar-menu .nav-link {
+            color: rgba(255,255,255,0.8);
+            padding: 12px 20px;
+            transition: all 0.3s;
+            border: none;
+            display: block;
+            text-decoration: none;
+        }
+        
+        .sidebar-menu .nav-link:hover,
+        .sidebar-menu .nav-link.active {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+        
+        .main-area {
+            margin-left: 250px;
+            min-height: 100vh;
+        }
+        
+        .header-bar {
+            background: white;
+            padding: 15px 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .content-wrapper {
+            padding: 30px;
+        }
+        
+        .stats-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border-left: 4px solid;
+            transition: transform 0.2s;
+        }
+        
+        .stats-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+        }
+        
+        .stats-card.primary { border-left-color: var(--primary); }
+        .stats-card.success { border-left-color: var(--success); }
+        .stats-card.warning { border-left-color: var(--warning); }
+        .stats-card.info { border-left-color: var(--info); }
+        
+        .contract-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+        
+        .contract-card:hover {
+            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+        }
+        
+        .contract-header {
+            padding: 20px;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .contract-body {
+            padding: 20px;
+        }
+        
+        .contract-status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .contract-status.activo { 
+            background-color: #d4edda; 
+            color: #155724; 
+        }
+        
+        .contract-status.completado { 
+            background-color: #cce5ff; 
+            color: #004085; 
+        }
+        
+        .contract-status.cancelado { 
+            background-color: #f8d7da; 
+            color: #721c24; 
+        }
+        
+        .progress-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+        
+        .user-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            margin: 2px;
+        }
+        
+        .btn-gradient {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .btn-gradient:hover {
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+        
+        .modal-custom .modal-header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border-radius: 12px 12px 0 0;
+        }
+        
+        .modal-custom .modal-content {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .avatar-circle {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .filter-section {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 25px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <nav class="sidebar-menu">
+        <div class="sidebar-header">
+            <i class="fas fa-clipboard-list fa-2x mb-2"></i>
+            <h5 class="mb-0">Gestión Contratos</h5>
+            <small>Panel Admin</small>
+        </div>
+        
+        <div class="mt-3">
+            <a href="/admin/dashboard" class="nav-link">
+                <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+            </a>
+            <a href="/admin/usuarios" class="nav-link">
+                <i class="fas fa-users me-2"></i>Usuarios
+            </a>
+            <a href="/admin/contratos" class="nav-link active">
+                <i class="fas fa-file-contract me-2"></i>Contratos
+            </a>
+            <a href="/admin/predios" class="nav-link">
+                <i class="fas fa-map-marker-alt me-2"></i>Predios
+            </a>
+            <a href="/admin/sectores" class="nav-link">
+                <i class="fas fa-map me-2"></i>Sectores
+            </a>
+            <a href="/admin/servicios" class="nav-link">
+                <i class="fas fa-cogs me-2"></i>Servicios
+            </a>
+            <a href="/admin/actividades" class="nav-link">
+                <i class="fas fa-tasks me-2"></i>Actividades
+            </a>
+            <a href="/logout" class="nav-link mt-4">
+                <i class="fas fa-sign-out-alt me-2"></i>Salir
+            </a>
+        </div>
+    </nav>
+    
+    <!-- Main Content -->
+    <div class="main-area">
+        <!-- Header -->
+        <div class="header-bar">
+            <div>
+                <h4 class="mb-0">Gestión de Contratos</h4>
+                <small class="text-muted">Administrar contratos y asignaciones</small>
+            </div>
+            <div class="d-flex align-items-center">
+                <div class="avatar-circle me-2" id="userAvatar">
+                    <span id="userInitials">--</span>
+                </div>
+                <div>
+                    <div class="fw-bold" id="userName">Usuario</div>
+                    <small class="text-muted" id="userRole">Rol</small>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Content -->
+        <div class="content-wrapper">
+            <!-- Alerts -->
+            <div id="alertsContainer"></div>
+            
+            <!-- Statistics -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="stats-card primary">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted mb-1">Total Contratos</h6>
+                                <h3 class="mb-0" id="statTotal">0</h3>
+                            </div>
+                            <i class="fas fa-file-contract fa-2x text-primary opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stats-card success">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted mb-1">Activos</h6>
+                                <h3 class="mb-0" id="statActivos">0</h3>
+                            </div>
+                            <i class="fas fa-check-circle fa-2x text-success opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stats-card warning">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted mb-1">En Proceso</h6>
+                                <h3 class="mb-0" id="statProceso">0</h3>
+                            </div>
+                            <i class="fas fa-spinner fa-2x text-warning opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stats-card info">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted mb-1">Completados</h6>
+                                <h3 class="mb-0" id="statCompletados">0</h3>
+                            </div>
+                            <i class="fas fa-flag-checkered fa-2x text-info opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Filters and Actions -->
+            <div class="filter-section">
+                <div class="row align-items-end">
+                    <div class="col-md-3">
+                        <label class="form-label">Estado</label>
+                        <select class="form-select" id="filterEstado">
+                            <option value="">Todos los estados</option>
+                            <option value="ACTIVO">Activo</option>
+                            <option value="EN_PROCESO">En Proceso</option>
+                            <option value="COMPLETADO">Completado</option>
+                            <option value="CANCELADO">Cancelado</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Sector</label>
+                        <select class="form-select" id="filterSector">
+                            <option value="">Todos los sectores</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Buscar</label>
+                        <input type="text" class="form-control" id="filterBuscar" 
+                               placeholder="Código, objetivo o supervisor...">
+                    </div>
+                    <div class="col-md-2 text-end">
+                        <button class="btn btn-gradient w-100" onclick="abrirModalNuevoContrato()">
+                            <i class="fas fa-plus me-2"></i>Nuevo Contrato
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Contracts List -->
+            <div id="contractsList">
+                <!-- Los contratos se cargarán dinámicamente aquí -->
+            </div>
+            
+            <!-- Loading -->
+            <div id="loadingIndicator" class="text-center py-5 d-none">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                </div>
+                <p class="mt-2 text-muted">Cargando contratos...</p>
+            </div>
+            
+            <!-- Empty State -->
+            <div id="emptyState" class="text-center py-5 d-none">
+                <i class="fas fa-file-contract fa-4x text-muted mb-3"></i>
+                <h5 class="text-muted">No hay contratos</h5>
+                <p class="text-muted">Comienza creando tu primer contrato</p>
+                <button class="btn btn-gradient" onclick="abrirModalNuevoContrato()">
+                    <i class="fas fa-plus me-2"></i>Crear Contrato
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal Nuevo/Editar Contrato -->
+    <div class="modal fade modal-custom" id="modalContrato" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalContratoTitle">
+                        <i class="fas fa-file-contract me-2"></i>Nuevo Contrato
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="contratoForm">
+                        <input type="hidden" id="contratoUuid" name="uuid">
+                        
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Código <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="codigo" name="codigo" 
+                                       pattern="^[A-Z0-9-]+$" required>
+                                <small class="text-muted">Solo letras mayúsculas, números y guiones</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Sector <span class="text-danger">*</span></label>
+                                <select class="form-select" id="sectorUuid" name="sectorUuid" required>
+                                    <option value="">Seleccionar...</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Objetivo <span class="text-danger">*</span></label>
+                                <textarea class="form-control" id="objetivo" name="objetivo" 
+                                          rows="3" required></textarea>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Fecha Inicio <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="fechaInicio" name="fechaInicio" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Fecha Fin <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="fechaFin" name="fechaFin" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Plan de Tarifa <span class="text-danger">*</span></label>
+                                <select class="form-select" id="planTarifaUuid" name="planTarifaUuid" required>
+                                    <option value="">Seleccionar...</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Supervisor</label>
+                                <select class="form-select" id="supervisorUuid" name="supervisorUuid">
+                                    <option value="">Sin asignar</option>
+                                </select>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-gradient" id="saveContratoBtn">
+                        <i class="fas fa-save me-2"></i>Guardar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Variables globales
+        let contratos = [];
+        let sectores = [];
+        let planesTarifa = [];
+        let supervisores = [];
+        let usuarioActual = null;
+        let modalContrato = null;
+        
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            modalContrato = new bootstrap.Modal(document.getElementById('modalContrato'));
+            configurarEventListeners();
+            cargarDatosIniciales();
+        });
+        
+        // Configurar event listeners
+        function configurarEventListeners() {
+            document.getElementById('saveContratoBtn').addEventListener('click', guardarContrato);
+            document.getElementById('filterEstado').addEventListener('change', aplicarFiltros);
+            document.getElementById('filterSector').addEventListener('change', aplicarFiltros);
+            document.getElementById('filterBuscar').addEventListener('input', debounce(aplicarFiltros, 500));
+            
+            // Validación de fechas
+            document.getElementById('fechaInicio').addEventListener('change', validarFechas);
+            document.getElementById('fechaFin').addEventListener('change', validarFechas);
+        }
+        
+        // Cargar datos iniciales
+        async function cargarDatosIniciales() {
+            mostrarLoading(true);
+            
+            try {
+                // Cargar información del usuario actual
+                await cargarUsuarioActual();
+                
+                // Cargar datos necesarios en paralelo
+                await Promise.all([
+                    cargarContratos(),
+                    cargarSectores(),
+                    cargarPlanesTarifa(),
+                    cargarSupervisores()
+                ]);
+                
+                actualizarEstadisticas();
+            } catch (error) {
+                console.error('Error cargando datos:', error);
+                mostrarAlerta('Error al cargar los datos', 'danger');
+            } finally {
+                mostrarLoading(false);
+            }
+        }
+        
+        // Cargar usuario actual
+        async function cargarUsuarioActual() {
+            // Simulación - esto vendría del backend
+            usuarioActual = {
+                uuid: 'user-uuid',
+                nombre: 'Admin',
+                apellido: 'Sistema',
+                perfil: 'ADMINISTRADOR'
+            };
+            
+            // Actualizar UI
+            document.getElementById('userInitials').textContent = 
+                (usuarioActual.nombre.charAt(0) + usuarioActual.apellido.charAt(0)).toUpperCase();
+            document.getElementById('userName').textContent = 
+                usuarioActual.nombre + ' ' + usuarioActual.apellido;
+            document.getElementById('userRole').textContent = usuarioActual.perfil;
+        }
+        
+        // Cargar contratos
+        async function cargarContratos() {
+            try {
+                const response = await fetch('/admin/contratos/api/listar');
+                if (response.ok) {
+                    contratos = await response.json();
+                    renderizarContratos();
+                }
+            } catch (error) {
+                console.error('Error cargando contratos:', error);
+            }
+        }
+        
+        // Cargar sectores
+        async function cargarSectores() {
+            try {
+                const response = await fetch('/admin/sectores/api/listar');
+                if (response.ok) {
+                    sectores = await response.json();
+                    llenarSelectSectores();
+                }
+            } catch (error) {
+                console.error('Error cargando sectores:', error);
+            }
+        }
+        
+        // Cargar planes de tarifa
+        async function cargarPlanesTarifa() {
+            try {
+                const response = await fetch('/admin/planes-tarifa/api/listar');
+                if (response.ok) {
+                    planesTarifa = await response.json();
+                    llenarSelectPlanesTarifa();
+                }
+            } catch (error) {
+                console.error('Error cargando planes:', error);
+            }
+        }
+        
+        // Cargar supervisores
+        async function cargarSupervisores() {
+            try {
+                const response = await fetch('/admin/usuarios/api/supervisores');
+                if (response.ok) {
+                    supervisores = await response.json();
+                    llenarSelectSupervisores();
+                }
+            } catch (error) {
+                console.error('Error cargando supervisores:', error);
+            }
+        }
+        
+        // Renderizar contratos
+        function renderizarContratos() {
+            const container = document.getElementById('contractsList');
+            const emptyState = document.getElementById('emptyState');
+            
+            if (contratos.length === 0) {
+                container.innerHTML = '';
+                emptyState.classList.remove('d-none');
+                return;
+            }
+            
+            emptyState.classList.add('d-none');
+            
+            container.innerHTML = contratos.map(contrato => {
+                const diasRestantes = calcularDiasRestantes(contrato.fechaFin);
+                const progreso = contrato.porcentajeAvance || 0;
+                
+                return `
+                    <div class="contract-card">
+                        <div class="contract-header">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h5 class="mb-1">
+                                        <i class="fas fa-file-contract text-primary me-2"></i>
+                                        ${contrato.codigo}
+                                    </h5>
+                                    <p class="text-muted mb-0">${contrato.objetivo}</p>
+                                </div>
+                                <span class="contract-status ${contrato.estado.toLowerCase()}">
+                                    ${formatearEstado(contrato.estado)}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="contract-body">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div class="mb-3">
+                                        <small class="text-muted d-block mb-1">
+                                            <i class="fas fa-map-marker-alt me-1"></i>
+                                            Sector: <strong>${contrato.sectorNombre || 'Sin asignar'}</strong>
+                                        </small>
+                                        <small class="text-muted d-block mb-1">
+                                            <i class="fas fa-calendar me-1"></i>
+                                            ${formatearFecha(contrato.fechaInicio)} - ${formatearFecha(contrato.fechaFin)}
+                                            <span class="badge bg-${diasRestantes > 30 ? 'success' : diasRestantes > 7 ? 'warning' : 'danger'} ms-2">
+                                                ${diasRestantes > 0 ? diasRestantes + ' días restantes' : 'Vencido'}
+                                            </span>
+                                        </small>
+                                        <small class="text-muted d-block">
+                                            <i class="fas fa-dollar-sign me-1"></i>
+                                            Plan: <strong>${contrato.planTarifaNombre || 'Sin asignar'}</strong>
+                                        </small>
+                                    </div>
+                                    
+                                    <div class="mb-2">
+                                        ${contrato.supervisorNombre ? `
+                                            <span class="user-badge bg-warning text-dark">
+                                                <i class="fas fa-user-tie me-1"></i>
+                                                ${contrato.supervisorNombre}
+                                            </span>
+                                        ` : ''}
+                                        
+                                        ${contrato.coordinadores && contrato.coordinadores.length > 0 ? 
+                                            contrato.coordinadores.map(coord => `
+                                                <span class="user-badge bg-info text-white">
+                                                    <i class="fas fa-user me-1"></i>
+                                                    ${coord.nombreCompleto}
+                                                </span>
+                                            `).join('') : ''
+                                        }
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="progress-card">
+                                        <div class="d-flex justify-content-between mb-1">
+                                            <small class="text-muted">Progreso</small>
+                                            <small class="text-muted">${progreso}%</small>
+                                        </div>
+                                        <div class="progress" style="height: 8px;">
+                                            <div class="progress-bar bg-success" 
+                                                 style="width: ${progreso}%"></div>
+                                        </div>
+                                        <div class="mt-2">
+                                            <small class="text-muted d-block">
+                                                <i class="fas fa-home me-1"></i>
+                                                Predios: ${contrato.prediosAsignados || 0}/${contrato.totalPredios || 0}
+                                            </small>
+                                            <small class="text-muted d-block">
+                                                <i class="fas fa-users me-1"></i>
+                                                Operarios: ${contrato.totalOperarios || 0}
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-3 d-flex gap-2">
+                                <button class="btn btn-sm btn-outline-primary" 
+                                        onclick="verDetalleContrato('${contrato.uuid}')">
+                                    <i class="fas fa-eye me-1"></i>Ver Detalle
+                                </button>
+                                <button class="btn btn-sm btn-outline-success" 
+                                        onclick="verAsignaciones('${contrato.uuid}')">
+                                    <i class="fas fa-user-plus me-1"></i>Asignaciones
+                                </button>
+                                ${puedeEditar(contrato) ? `
+                                    <button class="btn btn-sm btn-outline-warning" 
+                                            onclick="editarContrato('${contrato.uuid}')">
+                                        <i class="fas fa-edit me-1"></i>Editar
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // Actualizar estadísticas
+        function actualizarEstadisticas() {
+            const stats = {
+                total: contratos.length,
+                activos: contratos.filter(c => c.estado === 'ACTIVO').length,
+                proceso: contratos.filter(c => c.estado === 'EN_PROCESO').length,
+                completados: contratos.filter(c => c.estado === 'COMPLETADO').length
+            };
+            
+            document.getElementById('statTotal').textContent = stats.total;
+            document.getElementById('statActivos').textContent = stats.activos;
+            document.getElementById('statProceso').textContent = stats.proceso;
+            document.getElementById('statCompletados').textContent = stats.completados;
+        }
+        
+        // Abrir modal nuevo contrato
+        function abrirModalNuevoContrato() {
+            document.getElementById('modalContratoTitle').innerHTML = 
+                '<i class="fas fa-file-contract me-2"></i>Nuevo Contrato';
+            document.getElementById('contratoForm').reset();
+            document.getElementById('contratoUuid').value = '';
+            
+            // Establecer fecha mínima como hoy
+            const hoy = new Date().toISOString().split('T')[0];
+            document.getElementById('fechaInicio').min = hoy;
+            
+            modalContrato.show();
+        }
+        
+        // Editar contrato
+        async function editarContrato(uuid) {
+            const contrato = contratos.find(c => c.uuid === uuid);
+            if (!contrato) return;
+            
+            document.getElementById('modalContratoTitle').innerHTML = 
+                '<i class="fas fa-edit me-2"></i>Editar Contrato';
+            
+            // Llenar formulario
+            document.getElementById('contratoUuid').value = contrato.uuid;
+            document.getElementById('codigo').value = contrato.codigo;
+            document.getElementById('objetivo').value = contrato.objetivo;
+            document.getElementById('sectorUuid').value = contrato.sectorUuid;
+            document.getElementById('fechaInicio').value = contrato.fechaInicio;
+            document.getElementById('fechaFin').value = contrato.fechaFin;
+            document.getElementById('planTarifaUuid').value = contrato.planTarifaUuid;
+            document.getElementById('supervisorUuid').value = contrato.supervisorUuid || '';
+            
+            modalContrato.show();
+        }
+        
+        // Guardar contrato
+        async function guardarContrato() {
+            const form = document.getElementById('contratoForm');
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+            
+            const formData = new FormData(form);
+            const uuid = formData.get('uuid');
+            const isEdit = !!uuid;
+            
+            const btn = document.getElementById('saveContratoBtn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Guardando...';
+            btn.disabled = true;
+            
+            try {
+                const url = isEdit 
+                    ? `/admin/contratos/${uuid}/actualizar`
+                    : '/admin/contratos/crear';
+                
+                const response = await fetch(url, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    modalContrato.hide();
+                    mostrarAlerta(
+                        isEdit ? 'Contrato actualizado exitosamente' : 'Contrato creado exitosamente',
+                        'success'
+                    );
+                    await cargarContratos();
+                    actualizarEstadisticas();
+                } else {
+                    const error = await response.json();
+                    mostrarAlerta(error.message || 'Error al guardar contrato', 'danger');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarAlerta('Error de conexión', 'danger');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+        
+        // Ver detalle del contrato
+        function verDetalleContrato(uuid) {
+            window.location.href = `/admin/contratos/${uuid}`;
+        }
+        
+        // Ver asignaciones
+        function verAsignaciones(uuid) {
+            window.location.href = `/admin/contratos/${uuid}/asignaciones`;
+        }
+        
+        // Aplicar filtros
+        function aplicarFiltros() {
+            const estado = document.getElementById('filterEstado').value;
+            const sector = document.getElementById('filterSector').value;
+            const busqueda = document.getElementById('filterBuscar').value.toLowerCase();
+            
+            const contratosFiltrados = contratos.filter(contrato => {
+                const matchEstado = !estado || contrato.estado === estado;
+                const matchSector = !sector || contrato.sectorUuid === sector;
+                const matchBusqueda = !busqueda || 
+                    contrato.codigo.toLowerCase().includes(busqueda) ||
+                    contrato.objetivo.toLowerCase().includes(busqueda) ||
+                    (contrato.supervisorNombre && contrato.supervisorNombre.toLowerCase().includes(busqueda));
+                
+                return matchEstado && matchSector && matchBusqueda;
+            });
+            
+            // Renderizar con contratos filtrados
+            const temp = contratos;
+            contratos = contratosFiltrados;
+            renderizarContratos();
+            contratos = temp;
+        }
+        
+        // Llenar selects
+        function llenarSelectSectores() {
+            const select = document.getElementById('sectorUuid');
+            const filterSelect = document.getElementById('filterSector');
+            
+            select.innerHTML = '<option value="">Seleccionar...</option>' +
+                sectores.map(s => `<option value="${s.uuid}">${s.nombre}</option>`).join('');
+            
+            filterSelect.innerHTML = '<option value="">Todos los sectores</option>' +
+                sectores.map(s => `<option value="${s.uuid}">${s.nombre}</option>`).join('');
+        }
+        
+        function llenarSelectPlanesTarifa() {
+            const select = document.getElementById('planTarifaUuid');
+            select.innerHTML = '<option value="">Seleccionar...</option>' +
+                planesTarifa.map(p => `<option value="${p.uuid}">${p.nombre}</option>`).join('');
+        }
+        
+        function llenarSelectSupervisores() {
+            const select = document.getElementById('supervisorUuid');
+            select.innerHTML = '<option value="">Sin asignar</option>' +
+                supervisores.map(s => `<option value="${s.uuid}">${s.nombre} ${s.apellido}</option>`).join('');
+        }
+        
+        // Utilidades
+        function formatearFecha(fecha) {
+            return new Date(fecha).toLocaleDateString('es-CO', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+        }
+        
+        function formatearEstado(estado) {
+            const estados = {
+                'ACTIVO': 'Activo',
+                'EN_PROCESO': 'En Proceso',
+                'COMPLETADO': 'Completado',
+                'CANCELADO': 'Cancelado'
+            };
+            return estados[estado] || estado;
+        }
+        
+        function calcularDiasRestantes(fechaFin) {
+            const hoy = new Date();
+            const fin = new Date(fechaFin);
+            const diff = fin - hoy;
+            return Math.ceil(diff / (1000 * 60 * 60 * 24));
+        }
+        
+        function puedeEditar(contrato) {
+            if (usuarioActual.perfil === 'ADMINISTRADOR') return true;
+            if (usuarioActual.perfil === 'SUPERVISOR' && 
+                contrato.supervisorUuid === usuarioActual.uuid) return true;
+            return false;
+        }
+        
+        function validarFechas() {
+            const inicio = document.getElementById('fechaInicio').value;
+            const fin = document.getElementById('fechaFin').value;
+            
+            if (inicio && fin) {
+                if (new Date(fin) <= new Date(inicio)) {
+                    document.getElementById('fechaFin').setCustomValidity(
+                        'La fecha fin debe ser posterior a la fecha inicio'
+                    );
+                } else {
+                    document.getElementById('fechaFin').setCustomValidity('');
+                }
+            }
+        }
+        
+        function mostrarAlerta(mensaje, tipo) {
+            const container = document.getElementById('alertsContainer');
+            const alertId = 'alert-' + Date.now();
+            
+            const alertHtml = `
+                <div id="${alertId}" class="alert alert-${tipo} alert-dismissible fade show">
+                    <i class="fas fa-${tipo === 'success' ? 'check-circle' : 'exclamation-triangle'} me-2"></i>
+                    ${mensaje}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            
+            container.insertAdjacentHTML('afterbegin', alertHtml);
+            
+            setTimeout(() => {
+                const alert = document.getElementById(alertId);
+                if (alert) alert.remove();
+            }, 5000);
+        }
+        
+        function mostrarLoading(show) {
+            const loading = document.getElementById('loadingIndicator');
+            const content = document.getElementById('contractsList');
+            
+            if (show) {
+                loading.classList.remove('d-none');
+                content.classList.add('d-none');
+            } else {
+                loading.classList.add('d-none');
+                content.classList.remove('d-none');
+            }
+        }
+        
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
