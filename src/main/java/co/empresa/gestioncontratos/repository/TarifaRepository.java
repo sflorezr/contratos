@@ -1,21 +1,18 @@
 package co.empresa.gestioncontratos.repository;
 
-import co.empresa.gestioncontratos.entity.PlanTarifa;
 import co.empresa.gestioncontratos.entity.Servicio;
 import co.empresa.gestioncontratos.entity.Tarifa;
-
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
 
 @Repository
-public interface PlanTarifaRepository extends JpaRepository<PlanTarifa, Long> {
+public interface TarifaRepository extends JpaRepository<Tarifa, Long> {
     
-    Optional<PlanTarifa> findByUuid(UUID uuid);
+    List<Tarifa> findByServicioOrderByPrecioUrbanoAsc(Servicio servicio);
+   // boolean existsByNombre(String nombre);    
+    long countByServicio(Servicio servicio);
+
     
-    Optional<PlanTarifa> findByNombre(String nombre);
-            
 }

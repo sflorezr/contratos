@@ -3,6 +3,7 @@ package co.empresa.gestioncontratos.repository;
 import co.empresa.gestioncontratos.entity.Actividad;
 import co.empresa.gestioncontratos.entity.ContratoPredio;
 import co.empresa.gestioncontratos.entity.Predio;
+import co.empresa.gestioncontratos.entity.Servicio;
 import co.empresa.gestioncontratos.enums.EstadoActividad;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -10,6 +11,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.UUID;
 
 @Repository
@@ -44,5 +46,8 @@ public interface ActividadRepository extends JpaRepository<Actividad, Long> {
     // Contar por operario
     @Query("SELECT COUNT(a) FROM Actividad a WHERE a.operario.id = :operarioId")
     long countByOperarioId(@Param("operarioId") Long operarioId);
-
+    
+    List<Actividad> findByServicioOrderByNombreAsc(Servicio servicio);
+    
+    long countByServicio(Servicio servicio);
 }

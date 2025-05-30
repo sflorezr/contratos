@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Servicios</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --success: #48bb78;
+            --warning: #f6ad55;
+            --danger: #fc8181;
+            --info: #4299e1;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+        }
+        
+        .sidebar-menu {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 250px;
+            height: 100vh;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        
+        .sidebar-header {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .sidebar-menu .nav-link {
+            color: rgba(255,255,255,0.8);
+            padding: 12px 20px;
+            transition: all 0.3s;
+            border: none;
+            display: block;
+            text-decoration: none;
+        }
+        
+        .sidebar-menu .nav-link:hover,
+        .sidebar-menu .nav-link.active {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+        
+        .main-area {
+            margin-left: 250px;
+            min-height: 100vh;
+        }
+        
+        .header-bar {
+            background: white;
+            padding: 15px 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .content-wrapper {
+            padding: 30px;
+        }
+        
+        .servicio-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+        }
+        
+        .servicio-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        }
+        
+        .servicio-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 15px;
+        }
+        
+        .estado-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .estado-activo {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+        
+        .estado-inactivo {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+        
+        .btn-gradient {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+        
+        .btn-gradient:hover {
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+        
+        .filter-section {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .stats-row {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .stat-card {
+            text-align: center;
+            padding: 15px;
+            border-right: 1px solid #e9ecef;
+        }
+        
+        .stat-card:last-child {
+            border-right: none;
+        }
+        
+        .stat-number {
+            font-size: 28px;
+            font-weight: bold;
+            color: var(--primary);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+        
+        .empty-state i {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+        
+        .modal-header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+        }
+        
+        .form-section {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .avatar-circle {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <nav class="sidebar-menu">
+        <div class="sidebar-header">
+            <i class="fas fa-clipboard-list fa-2x mb-2"></i>
+            <h5 class="mb-0">Gestión Contratos</h5>
+            <small>Panel Admin</small>
+        </div>
+        
+        <div class="mt-3">
+            <a href="/admin/dashboard" class="nav-link">
+                <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+            </a>
+            <a href="/admin/usuarios" class="nav-link">
+                <i class="fas fa-users me-2"></i>Usuarios
+            </a>
+            <a href="/admin/contratos" class="nav-link">
+                <i class="fas fa-file-contract me-2"></i>Contratos
+            </a>
+            <a href="/admin/predios" class="nav-link">
+                <i class="fas fa-map-marker-alt me-2"></i>Predios
+            </a>
+            <a href="/admin/sectores" class="nav-link">
+                <i class="fas fa-map me-2"></i>Sectores
+            </a>
+            <a href="/admin/servicios" class="nav-link active">
+                <i class="fas fa-cogs me-2"></i>Servicios
+            </a>
+            <a href="/admin/actividades" class="nav-link">
+                <i class="fas fa-tasks me-2"></i>Actividades
+            </a>
+            <a href="/logout" class="nav-link mt-4">
+                <i class="fas fa-sign-out-alt me-2"></i>Salir
+            </a>
+        </div>
+    </nav>
+    
+    <!-- Main Content -->
+    <div class="main-area">
+        <!-- Header -->
+        <div class="header-bar">
+            <div>
+                <h4 class="mb-0">Gestión de Servicios</h4>
+                <small class="text-muted">Administrar servicios del sistema</small>
+            </div>
+            <div class="d-flex align-items-center">
+                <button class="btn btn-gradient btn-sm me-3" onclick="openNewServicioModal()">
+                    <i class="fas fa-plus me-2"></i>Nuevo Servicio
+                </button>
+                <div class="avatar-circle me-2">AS</div>
+                <div>
+                    <div class="fw-bold">Administrador</div>
+                    <small class="text-muted">Admin</small>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Content -->
+        <div class="content-wrapper">
+            <!-- Alerts -->
+            <div id="alertsContainer"></div>
+            
+            <!-- Estadísticas -->
+            <div class="stats-row">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <div class="stat-number" id="totalServicios">0</div>
+                            <div class="text-muted">Total Servicios</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <div class="stat-number" id="serviciosActivos">0</div>
+                            <div class="text-muted">Activos</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <div class="stat-number" id="serviciosConTarifas">0</div>
+                            <div class="text-muted">Con Tarifas</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <div class="stat-number" id="serviciosConActividades">0</div>
+                            <div class="text-muted">Con Actividades</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Filtros -->
+            <div class="filter-section">
+                <h6 class="mb-3"><i class="fas fa-filter me-2"></i>Filtros</h6>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <input type="text" class="form-control" id="filtroBusqueda" 
+                               placeholder="Buscar por nombre...">
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" id="filtroEstado">
+                            <option value="">Todos los estados</option>
+                            <option value="true">Activo</option>
+                            <option value="false">Inactivo</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" id="filtroTipo">
+                            <option value="">Todos los tipos</option>
+                            <option value="conTarifas">Con Tarifas</option>
+                            <option value="sinTarifas">Sin Tarifas</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-outline-primary w-100" onclick="aplicarFiltros()">
+                            <i class="fas fa-search me-2"></i>Buscar
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Lista de Servicios -->
+            <div id="serviciosContainer">
+                <!-- Los servicios se cargan dinámicamente aquí -->
+            </div>
+            
+            <!-- Loading -->
+            <div id="loadingIndicator" class="text-center py-4 d-none">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                </div>
+            </div>
+            
+            <!-- Empty State -->
+            <div id="emptyState" class="empty-state d-none">
+                <i class="fas fa-cogs"></i>
+                <h5>No se encontraron servicios</h5>
+                <p>Crea un nuevo servicio para comenzar</p>
+                <button class="btn btn-gradient" onclick="openNewServicioModal()">
+                    <i class="fas fa-plus me-2"></i>Crear Servicio
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal Nuevo/Editar Servicio -->
+    <div class="modal fade" id="modalServicio" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-cog me-2"></i>
+                        <span id="modalServicioTitle">Nuevo Servicio</span>
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="servicioForm">
+                        <input type="hidden" id="servicioUuid" name="uuid">
+                        
+                        <!-- Información básica -->
+                        <div class="form-section">
+                            <h6 class="mb-3"><i class="fas fa-info-circle me-2"></i>Información del Servicio</h6>
+                            <div class="mb-3">
+                                <label class="form-label">Nombre <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="nombre" name="nombre" 
+                                       required maxlength="100" placeholder="Ej: Mantenimiento Preventivo">
+                                <div class="invalid-feedback">El nombre es requerido</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Descripción</label>
+                                <textarea class="form-control" id="descripcion" name="descripcion" 
+                                          rows="3" maxlength="2000" 
+                                          placeholder="Descripción detallada del servicio..."></textarea>
+                                <div class="form-text">Máximo 2000 caracteres</div>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="activo" name="activo" checked>
+                                <label class="form-check-label" for="activo">
+                                    Servicio Activo
+                                </label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-gradient" onclick="guardarServicio()">
+                        <i class="fas fa-save me-2"></i>Guardar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/servicios.js"></script>
+</body>
+</html>

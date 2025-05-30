@@ -41,6 +41,10 @@ public class Actividad {
     @JoinColumn(name = "predio_id", nullable = false)
     private Predio predio;
 
+    @NotBlank
+    @Column(name="nombre", nullable = false, length = 100)
+    private String nombre;
+
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "operario_id", nullable = false)

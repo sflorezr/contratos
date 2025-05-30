@@ -28,7 +28,7 @@ public class Servicio {
     private UUID uuid;
 
     @NotBlank
-    @Column(nullable = false, length = 100)
+    @Column(name="nombre", nullable = false, length = 100)
     private String nombre;
 
     @Column(columnDefinition = "TEXT")
