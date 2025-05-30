@@ -63,4 +63,10 @@ public interface ContratoRepository extends JpaRepository<Contrato, Long> {
     long countBySectorAndEstado(Sector sector, EstadoContrato estado);
     
     boolean existsBySector(Sector sector);
+    @Query("SELECT DISTINCT c FROM Contrato c " +
+        "JOIN c.contratoPredios cp " +
+        "WHERE cp.operario = :operario " +
+        "AND cp.activo = true " +
+        "ORDER BY c.fechaInicio DESC")
+    List<Contrato> findContratosConOperario(@Param("operario") Usuario operario);    
 }

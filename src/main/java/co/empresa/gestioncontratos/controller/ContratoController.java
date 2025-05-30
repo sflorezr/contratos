@@ -8,15 +8,19 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import co.empresa.gestioncontratos.dto.AsignacionMasivaDTO;
+import co.empresa.gestioncontratos.dto.ContratoDTO;
+import co.empresa.gestioncontratos.dto.UsuarioDTO;
 import co.empresa.gestioncontratos.entity.Contrato;
 import co.empresa.gestioncontratos.entity.ContratoPredio;
 import co.empresa.gestioncontratos.entity.Usuario;
 import co.empresa.gestioncontratos.enums.PerfilUsuario;
+import co.empresa.gestioncontratos.repository.UsuarioRepository;
 import co.empresa.gestioncontratos.service.ContratoService;
 import co.empresa.gestioncontratos.service.PredioService;
 import co.empresa.gestioncontratos.service.UsuarioService;
 
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -29,7 +33,7 @@ public class ContratoController {
 
     private final ContratoService contratoService;
     private final UsuarioService usuarioService;
-    private final PredioService predioService;
+    
 
     // Vista principal de contratos
     @GetMapping
@@ -404,6 +408,74 @@ public class ContratoController {
         
         return false;
     }
+    @GetMapping("/api/listar")
+    @ResponseBody
+    public ResponseEntity<List<ContratoDTO>> listarContratosAPI(@AuthenticationPrincipal Usuario usuarioActual) {
+        log.info("=== API: LISTANDO CONTRATOS ===");
+        log.info("Usuario: {} ({})", usuarioActual.getUsername(), usuarioActual.getPerfil());
+        
+        try {
+            List<Contrato> contratos;
+            
+            // Filtrar contratos según el perfil del usuario
+            switch (usuarioActual.getPerfil()) {
+                case ADMINISTRADOR:
+                    contratos = contratoService.listarTodos();
+                    break;
+                case SUPERVISOR:
+                    contratos = contratoService.listarPorSupervisor(usuarioActual);
+                    break;
+                case COORDINADOR:
+                    contratos = contratoService.listarPorCoordinador(usuarioActual);
+                    break;
+                case OPERARIO:
+                    contratos = contratoService.listarPorOperario(usuarioActual);
+                    break;
+                default:
+                    contratos = new ArrayList<>();
+            }
+            
+            // Convertir a DTOs con información adicional
+            List<ContratoDTO> contratosDTO = contratos.stream()
+                .map(contrato -> {
+                    ContratoDTO dto = ContratoDTO.builder()
+                        .uuid(contrato.getUuid())
+                        .codigo(contrato.getNumeroContrato())
+                        .objetivo(contrato.getObjetivo())
+                        .sectorUuid(contrato.getSector() != null ? contrato.getSector().getUuid() : null)
+                        .sectorNombre(contrato.getNombreSector())
+                        .fechaInicio(contrato.getFechaInicio())
+                        .fechaFin(contrato.getFechaFin())
+                        .planTarifaUuid(contrato.getPlanTarifa() != null ? contrato.getPlanTarifa().getUuid() : null)
+                        .planTarifaNombre(contrato.getNombrePlanTarifa())
+                        .supervisorUuid(contrato.getSupervisor() != null ? contrato.getSupervisor().getUuid() : null)
+                        .supervisorNombre(contrato.getNombreSupervisor())
+                        .estado(contrato.getEstado())
+                        .build();
+                    
+                    // Agregar estadísticas del contrato
+                    Map<String, Object> estadisticas = contratoService.obtenerEstadisticas(contrato);
+                    dto.setTotalPredios(((Number) estadisticas.get("totalPredios")).intValue());
+                    dto.setPrediosAsignados(((Number) estadisticas.get("prediosAsignados")).intValue());
+                    dto.setTotalOperarios(contratoService.obtenerOperariosDelContrato(contrato).size());
+                    dto.setPorcentajeAvance(((Number) estadisticas.get("porcentajeCompletado")).doubleValue());
+                    
+                    // Verificar si puede ser eliminado
+                    dto.setPuedeSerEliminado(contrato.puedeSerEliminado());
+                    
+                    return dto;
+                })
+                .collect(Collectors.toList());
+            
+            log.info("✅ Retornando {} contratos", contratosDTO.size());
+            return ResponseEntity.ok(contratosDTO);
+            
+        } catch (Exception e) {
+            log.error("❌ Error al listar contratos: ", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
 }
 
 

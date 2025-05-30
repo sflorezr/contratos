@@ -425,4 +425,21 @@ public class ContratoService {
     public List<Usuario> obtenerOperariosDelContrato(Contrato contrato) {
         return predioOperarioRepository.findOperariosByContrato(contrato);
     }
-}
+    @Transactional(readOnly = true)
+    public List<Contrato> listarPorOperario(Usuario operario) {
+        log.info("Listando contratos del operario: {}", operario.getUsername());
+        
+        // Verificar que el usuario sea operario
+        if (operario.getPerfil() != PerfilUsuario.OPERARIO) {
+            log.warn("El usuario {} no es operario, perfil: {}", operario.getUsername(), operario.getPerfil());
+            return new ArrayList<>();
+        }
+        
+        // Obtener contratos donde el operario tiene predios asignados
+        List<Contrato> contratos = contratoRepository.findContratosConOperario(operario);
+        
+        log.info("Operario {} tiene acceso a {} contratos", operario.getUsername(), contratos.size());
+        
+        return contratos;
+    }    
+    }

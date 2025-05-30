@@ -96,4 +96,13 @@ public class ContratoDTO {
         LocalDate hoy = LocalDate.now();
         return java.time.temporal.ChronoUnit.DAYS.between(hoy, fechaFin);
     }
+    private boolean puedeSerEliminado;
+
+    public boolean isPuedeSerEliminado() {
+        return puedeSerEliminado;
+    }
+
+    public void setPuedeSerEliminado(boolean puedeSerEliminado) {
+        this.puedeSerEliminado = puedeSerEliminado;
+    }
 }

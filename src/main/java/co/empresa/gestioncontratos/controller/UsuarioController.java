@@ -3,6 +3,7 @@ package co.empresa.gestioncontratos.controller;
 import co.empresa.gestioncontratos.dto.UsuarioDTO;
 import co.empresa.gestioncontratos.entity.Usuario;
 import co.empresa.gestioncontratos.enums.PerfilUsuario;
+import co.empresa.gestioncontratos.repository.UsuarioRepository;
 import co.empresa.gestioncontratos.service.UsuarioService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -10,6 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
@@ -20,8 +22,10 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import jakarta.validation.Valid;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/admin/usuarios")
@@ -30,6 +34,7 @@ import java.util.UUID;
 public class UsuarioController {
 
     private final UsuarioService usuarioService;
+    private final UsuarioRepository usuarioRepository;
 
     // ==================== PÁGINAS WEB ====================
     
@@ -361,6 +366,23 @@ public class UsuarioController {
             response.put("error", e.getMessage());
             response.put("controllerStatus", "ERROR");
             return ResponseEntity.badRequest().body(response);
+        }
+    }
+        @GetMapping("/api/supervisores")
+    @ResponseBody
+    public ResponseEntity<List<UsuarioDTO>> listarSupervisores() {
+        log.info("=== API: LISTANDO SUPERVISORES ===");
+        
+        try {
+            List<Usuario> supervisores = usuarioRepository.findByPerfilAndActivoTrue(PerfilUsuario.SUPERVISOR);
+            List<UsuarioDTO> supervisoresDTO = supervisores.stream()
+                .map(usuarioService::convertirADTO)
+                .collect(Collectors.toList());
+            
+            return ResponseEntity.ok(supervisoresDTO);
+        } catch (Exception e) {
+            log.error("Error al listar supervisores: ", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 }
