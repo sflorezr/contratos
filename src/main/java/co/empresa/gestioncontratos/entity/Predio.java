@@ -49,9 +49,15 @@ public class Predio {
     @Column(nullable = false)
     private Boolean activo = true;
 
+    @Column(name = "area")
+    private Double area;
+
     @CreationTimestamp
     @Column(name = "fecha_creacion", nullable = false, updatable = false)
     private LocalDateTime fechaCreacion;
+
+    @Column(name = "codigo_catastral", unique = true, nullable = false, length = 50)
+    private String codigoCatastral;
 
     // Relaciones
     @OneToMany(mappedBy = "predio", fetch = FetchType.LAZY, cascade = CascadeType.ALL)

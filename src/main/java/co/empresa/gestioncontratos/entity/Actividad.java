@@ -51,6 +51,11 @@ public class Actividad {
     @JoinColumn(name = "servicio_id", nullable = false)
     private Servicio servicio;
 
+    @NotNull
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "contrato_predio_id", nullable = false)
+    private ContratoPredio contratoPredio;
+    
     @NotBlank
     @Column(nullable = false, columnDefinition = "TEXT")
     private String descripcion;

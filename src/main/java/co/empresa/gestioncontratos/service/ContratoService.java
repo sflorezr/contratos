@@ -1,9 +1,9 @@
 package co.empresa.gestioncontratos.service;
 
+import co.empresa.gestioncontratos.dto.*;
 import co.empresa.gestioncontratos.entity.*;
-import co.empresa.gestioncontratos.enums.PerfilUsuario;
+import co.empresa.gestioncontratos.enums.*;
 import co.empresa.gestioncontratos.repository.*;
-import co.empresa.gestioncontratos.dto.ContratoDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -24,7 +24,9 @@ public class ContratoService {
     private final ContratoPredioRepository contratoPredioRepository;
     private final UsuarioRepository usuarioRepository;
     private final PredioRepository predioRepository;
-    private final ActividadRepository actividadRepository;
+    private final SectorRepository sectorRepository;
+    private final PlanTarifaRepository planTarifaRepository;
+    private final PredioOperarioRepository predioOperarioRepository;
 
     // ==================== CONSULTAS ====================
 
@@ -50,13 +52,18 @@ public class ContratoService {
         log.info("Listando contratos del coordinador: {}", coordinador.getUsername());
         return contratoRepository.findByCoordinadoresContainingOrderByFechaInicioDesc(coordinador);
     }
-
+/* 
     @Transactional(readOnly = true)
-    public List<Contrato> listarPorOperario(Usuario operario) {
-        log.info("Listando contratos del operario: {}", operario.getUsername());
-        return contratoRepository.findContratosConOperario(operario);
+    public List<Usuario> listarPorOperario(Contrato contrato) {
+        log.info("Listando contratos del operario: {}", contrato.getNumeroContrato());
+        return contratoRepository.findOperariosPorContrato(contrato);
     }
-
+*/
+    @Transactional(readOnly = true)
+    public List<Contrato> listarContratoPorOperario(Usuario operario) {
+        log.info("Listando contratos del operario: {}", operario.getUsername());
+        return contratoRepository.findContratosConOperarioEnPredios(operario);
+    }
     @Transactional(readOnly = true)
     public Contrato buscarPorUuid(UUID uuid) {
         return contratoRepository.findByUuid(uuid)
@@ -64,9 +71,9 @@ public class ContratoService {
     }
 
     @Transactional(readOnly = true)
-    public Contrato buscarPorCodigo(String codigo) {
-        return contratoRepository.findByCodigo(codigo)
-            .orElseThrow(() -> new RuntimeException("Contrato no encontrado con código: " + codigo));
+    public Contrato buscarPorNumeroContrato(String numeroContrato) {
+        return contratoRepository.findByNumeroContrato(numeroContrato)
+            .orElseThrow(() -> new RuntimeException("Contrato no encontrado con número: " + numeroContrato));
     }
 
     // ==================== GESTIÓN DE CONTRATOS ====================
@@ -74,9 +81,9 @@ public class ContratoService {
     public Contrato crear(ContratoDTO contratoDTO) {
         log.info("Creando nuevo contrato: {}", contratoDTO.getCodigo());
         
-        // Validar que no exista el código
-        if (contratoRepository.existsByCodigo(contratoDTO.getCodigo())) {
-            throw new RuntimeException("Ya existe un contrato con el código: " + contratoDTO.getCodigo());
+        // Validar que no exista el número
+        if (contratoRepository.existsByNumeroContrato(contratoDTO.getCodigo())) {
+            throw new RuntimeException("Ya existe un contrato con el número: " + contratoDTO.getCodigo());
         }
         
         // Validar fechas
@@ -85,7 +92,7 @@ public class ContratoService {
         }
         
         Contrato contrato = Contrato.builder()
-            .codigo(contratoDTO.getCodigo())
+            .numeroContrato(contratoDTO.getCodigo())
             .objetivo(contratoDTO.getObjetivo())
             .sector(sectorRepository.findByUuid(contratoDTO.getSectorUuid())
                 .orElseThrow(() -> new RuntimeException("Sector no encontrado")))
@@ -104,10 +111,10 @@ public class ContratoService {
         
         Contrato contrato = buscarPorUuid(uuid);
         
-        // Validar código único si cambió
-        if (!contrato.getCodigo().equals(contratoDTO.getCodigo()) &&
-            contratoRepository.existsByCodigo(contratoDTO.getCodigo())) {
-            throw new RuntimeException("Ya existe otro contrato con el código: " + contratoDTO.getCodigo());
+        // Validar número único si cambió
+        if (!contrato.getNumeroContrato().equals(contratoDTO.getCodigo()) &&
+            contratoRepository.existsByNumeroContrato(contratoDTO.getCodigo())) {
+            throw new RuntimeException("Ya existe otro contrato con el número: " + contratoDTO.getCodigo());
         }
         
         // Validar fechas
@@ -115,7 +122,7 @@ public class ContratoService {
             throw new RuntimeException("La fecha fin no puede ser anterior a la fecha inicio");
         }
         
-        contrato.setCodigo(contratoDTO.getCodigo());
+        contrato.setNumeroContrato(contratoDTO.getCodigo());
         contrato.setObjetivo(contratoDTO.getObjetivo());
         contrato.setFechaInicio(contratoDTO.getFechaInicio());
         contrato.setFechaFin(contratoDTO.getFechaFin());
@@ -139,6 +146,18 @@ public class ContratoService {
         Contrato contrato = buscarPorUuid(uuid);
         contrato.setEstado(nuevoEstado);
         contratoRepository.save(contrato);
+    }
+
+    public void eliminar(UUID uuid) {
+        log.info("Eliminando contrato: {}", uuid);
+        
+        Contrato contrato = buscarPorUuid(uuid);
+        
+        if (contrato.tieneCoordinadores() || contrato.tienePredios()) {
+            throw new RuntimeException("No se puede eliminar el contrato porque tiene asignaciones activas");
+        }
+        
+        contratoRepository.delete(contrato);
     }
 
     // ==================== ASIGNACIÓN DE USUARIOS ====================
@@ -194,60 +213,6 @@ public class ContratoService {
         contratoRepository.save(contrato);
     }
 
-    // ==================== ASIGNACIÓN DE OPERARIOS A PREDIOS ====================
-
-    public ContratoPredio asignarOperarioAPredio(UUID contratoUuid, UUID predioUuid, UUID operarioUuid) {
-        log.info("Asignando operario {} al predio {} del contrato {}", operarioUuid, predioUuid, contratoUuid);
-        
-        ContratoPredio contratoPredio = contratoPredioRepository
-            .findByContratoUuidAndPredioUuid(contratoUuid, predioUuid)
-            .orElseThrow(() -> new RuntimeException("Predio no encontrado en el contrato"));
-        
-        Usuario operario = usuarioRepository.findByUuid(operarioUuid)
-            .orElseThrow(() -> new RuntimeException("Operario no encontrado"));
-        
-        if (operario.getPerfil() != PerfilUsuario.OPERARIO) {
-            throw new RuntimeException("El usuario no tiene perfil de operario");
-        }
-        
-        contratoPredio.setOperario(operario);
-        contratoPredio.setEstado(EstadoPredio.ASIGNADO);
-        
-        return contratoPredioRepository.save(contratoPredio);
-    }
-
-    public int asignarOperariosMasivo(UUID contratoUuid, List<AsignacionPredioOperario> asignaciones) {
-        log.info("Realizando asignación masiva de {} operarios en contrato {}", 
-            asignaciones.size(), contratoUuid);
-        
-        int asignacionesRealizadas = 0;
-        
-        for (AsignacionPredioOperario asignacion : asignaciones) {
-            try {
-                asignarOperarioAPredio(contratoUuid, asignacion.getPredioUuid(), asignacion.getOperarioUuid());
-                asignacionesRealizadas++;
-            } catch (Exception e) {
-                log.error("Error asignando operario {} a predio {}: {}", 
-                    asignacion.getOperarioUuid(), asignacion.getPredioUuid(), e.getMessage());
-            }
-        }
-        
-        return asignacionesRealizadas;
-    }
-
-    public void removerOperarioDePredio(UUID contratoUuid, UUID predioUuid) {
-        log.info("Removiendo operario del predio {} del contrato {}", predioUuid, contratoUuid);
-        
-        ContratoPredio contratoPredio = contratoPredioRepository
-            .findByContratoUuidAndPredioUuid(contratoUuid, predioUuid)
-            .orElseThrow(() -> new RuntimeException("Predio no encontrado en el contrato"));
-        
-        contratoPredio.setOperario(null);
-        contratoPredio.setEstado(EstadoPredio.PENDIENTE);
-        
-        contratoPredioRepository.save(contratoPredio);
-    }
-
     // ==================== GESTIÓN DE PREDIOS ====================
 
     public void agregarPredios(UUID contratoUuid, List<UUID> predioUuids) {
@@ -268,6 +233,7 @@ public class ContratoService {
                     .contrato(contrato)
                     .predio(predio)
                     .estado(EstadoPredio.PENDIENTE)
+                    .activo(true)
                     .build();
                 
                 contratoPredioRepository.save(contratoPredio);
@@ -282,42 +248,18 @@ public class ContratoService {
             .findByContratoUuidAndPredioUuid(contratoUuid, predioUuid)
             .orElseThrow(() -> new RuntimeException("Predio no encontrado en el contrato"));
         
-        // Verificar que no tenga actividades registradas
-        if (actividadRepository.existsByContratoPredio(contratoPredio)) {
-            throw new RuntimeException("No se puede remover el predio porque tiene actividades registradas");
-        }
-        
-        contratoPredioRepository.delete(contratoPredio);
+        contratoPredio.setActivo(false);
+        contratoPredioRepository.save(contratoPredio);
     }
 
     // ==================== CONSULTAS Y ESTADÍSTICAS ====================
-
-    @Transactional(readOnly = true)
-    public List<Usuario> obtenerOperariosDelContrato(Contrato contrato) {
-        return contratoPredioRepository.findOperariosDelContrato(contrato);
-    }
-
-    @Transactional(readOnly = true)
-    public List<Usuario> obtenerOperariosDisponibles(Contrato contrato) {
-        List<Usuario> todosOperarios = usuarioRepository.findOperariosActivos();
-        List<Usuario> operariosAsignados = obtenerOperariosDelContrato(contrato);
-        
-        // Filtrar operarios que no tienen todos los predios asignados
-        return todosOperarios.stream()
-            .filter(op -> {
-                long prediosAsignados = contratoPredioRepository
-                    .countByContratoAndOperario(contrato, op);
-                return prediosAsignados < contrato.getPredios().size();
-            })
-            .collect(Collectors.toList());
-    }
 
     @Transactional(readOnly = true)
     public Map<String, Object> obtenerEstadisticas(Contrato contrato) {
         Map<String, Object> stats = new HashMap<>();
         
         long totalPredios = contratoPredioRepository.countByContrato(contrato);
-        long prediosAsignados = contratoPredioRepository.countByContratoAndOperarioIsNotNull(contrato);
+        long prediosAsignados = contratoPredioRepository.countByContratoAndEstado(contrato, EstadoPredio.ASIGNADO);
         long prediosPendientes = contratoPredioRepository.countByContratoAndEstado(contrato, EstadoPredio.PENDIENTE);
         long prediosCompletados = contratoPredioRepository.countByContratoAndEstado(contrato, EstadoPredio.COMPLETADO);
         
@@ -332,8 +274,120 @@ public class ContratoService {
     }
 
     @Transactional(readOnly = true)
+    public List<ContratoPredio> obtenerPrediosDelContrato(UUID contratoUuid) {
+        Contrato contrato = buscarPorUuid(contratoUuid);
+        return contratoPredioRepository.findByContratoAndActivoTrue(contrato);
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, Object> obtenerResumenAsignaciones(UUID contratoUuid) {
+        Contrato contrato = buscarPorUuid(contratoUuid);
+        Map<String, Object> resumen = new HashMap<>();
+        
+        // Información básica del contrato
+        resumen.put("codigo", contrato.getNumeroContrato());
+        resumen.put("objetivo", contrato.getObjetivo());
+        resumen.put("sectorNombre", contrato.getNombreSector());
+        resumen.put("fechaInicio", contrato.getFechaInicio());
+        resumen.put("fechaFin", contrato.getFechaFin());
+        resumen.put("estado", contrato.getEstado());
+        
+        // Supervisor
+        if (contrato.getSupervisor() != null) {
+            resumen.put("supervisor", Map.of(
+                "uuid", contrato.getSupervisor().getUuid(),
+                "nombre", contrato.getSupervisor().getNombreCompleto()
+            ));
+        }
+        
+        // Coordinadores
+        resumen.put("coordinadores", contrato.getCoordinadores().stream()
+            .map(coord -> Map.of(
+                "uuid", coord.getUuid(),
+                "nombre", coord.getNombreCompleto()
+            ))
+            .collect(Collectors.toList()));
+        
+        // Estadísticas
+        Map<String, Object> stats = obtenerEstadisticas(contrato);
+        resumen.putAll(stats);
+        
+        return resumen;
+    }
+    public ContratoPredio asignarOperarioAPredio(UUID contratoUuid, UUID predioUuid, UUID operarioUuid) {
+        log.info("Asignando operario {} al predio {} del contrato {}", operarioUuid, predioUuid, contratoUuid);
+        
+        ContratoPredio contratoPredio = contratoPredioRepository
+            .findByContratoUuidAndPredioUuid(contratoUuid, predioUuid)
+            .orElseThrow(() -> new RuntimeException("Predio no encontrado en el contrato"));
+        
+        Usuario operario = usuarioRepository.findByUuid(operarioUuid)
+            .orElseThrow(() -> new RuntimeException("Operario no encontrado"));
+        
+        if (operario.getPerfil() != PerfilUsuario.OPERARIO) {
+            throw new RuntimeException("El usuario no tiene perfil de operario");
+        }
+        
+        // Crear o actualizar la asignación en PredioOperario
+        PredioOperario predioOperario = predioOperarioRepository
+            .findByPredioAndContratoAndActivoTrue(contratoPredio.getPredio(), contratoPredio.getContrato())
+            .orElse(PredioOperario.builder()
+                .predio(contratoPredio.getPredio())
+                .contrato(contratoPredio.getContrato())
+                .build());
+        
+        predioOperario.setOperario(operario);
+        predioOperario.setActivo(true);
+        predioOperarioRepository.save(predioOperario);
+        
+        contratoPredio.setEstado(EstadoPredio.ASIGNADO);
+        return contratoPredioRepository.save(contratoPredio);
+    }
+    public int asignarOperariosMasivo(UUID contratoUuid, List<AsignacionPredioOperario> asignaciones) {
+        log.info("Realizando asignación masiva de {} operarios en contrato {}", 
+            asignaciones.size(), contratoUuid);
+        
+        int asignacionesRealizadas = 0;
+        
+        for (AsignacionPredioOperario asignacion : asignaciones) {
+            try {
+                asignarOperarioAPredio(contratoUuid, asignacion.getPredioUuid(), asignacion.getOperarioUuid());
+                asignacionesRealizadas++;
+            } catch (Exception e) {
+                log.error("Error asignando operario {} a predio {}: {}", 
+                    asignacion.getOperarioUuid(), asignacion.getPredioUuid(), e.getMessage());
+            }
+        }
+        
+        return asignacionesRealizadas;
+    }
+        @Transactional(readOnly = true)
+    public List<Usuario> obtenerOperariosDisponibles(Contrato contrato) {
+        // Obtener todos los operarios activos
+        List<Usuario> todosOperarios = usuarioRepository.findByPerfilAndActivoTrue(PerfilUsuario.OPERARIO);
+        
+        // Obtener operarios ya asignados al contrato
+        List<Usuario> operariosAsignados = predioOperarioRepository.findOperariosByContrato(contrato);
+        
+        // Filtrar operarios que aún pueden ser asignados a más predios
+        return todosOperarios.stream()
+            .filter(op -> {
+                long prediosAsignadosCount = predioOperarioRepository
+                    .countByOperarioAndContratoAndActivoTrue(op, contrato);
+                long totalPrediosContrato = contratoPredioRepository.countByContrato(contrato);
+                // Un operario está disponible si no está asignado a todos los predios
+                return prediosAsignadosCount < totalPrediosContrato;
+            })
+            .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public long contarPrediosAsignadosAOperario(Contrato contrato, Usuario operario) {
+        return predioOperarioRepository.countByOperarioAndContratoAndActivoTrue(operario, contrato);
+    }
+        @Transactional(readOnly = true)
     public List<Map<String, Object>> obtenerOperariosConPredios(Contrato contrato) {
-        List<Usuario> operarios = obtenerOperariosDelContrato(contrato);
+        List<Usuario> operarios = predioOperarioRepository.findOperariosByContrato(contrato);
         
         return operarios.stream().map(operario -> {
             Map<String, Object> info = new HashMap<>();
@@ -341,14 +395,13 @@ public class ContratoService {
             info.put("nombre", operario.getNombre() + " " + operario.getApellido());
             info.put("username", operario.getUsername());
             
-            List<ContratoPredio> prediosAsignados = contratoPredioRepository
-                .findByContratoAndOperario(contrato, operario);
+            List<PredioOperario> prediosAsignados = predioOperarioRepository
+                .findByOperarioAndContratoAndActivoTrue(operario, contrato);
             
-            info.put("prediosAsignados", prediosAsignados.stream().map(cp -> Map.of(
-                "uuid", cp.getPredio().getUuid(),
-                "direccion", cp.getPredio().getDireccion(),
-                "tipo", cp.getPredio().getTipo(),
-                "estado", cp.getEstado()
+            info.put("prediosAsignados", prediosAsignados.stream().map(po -> Map.of(
+                "uuid", po.getPredio().getUuid(),
+                "direccion", po.getPredio().getDireccion(),
+                "tipo", po.getPredio().getTipo()
             )).collect(Collectors.toList()));
             
             info.put("totalPrediosAsignados", prediosAsignados.size());
@@ -356,19 +409,20 @@ public class ContratoService {
             return info;
         }).collect(Collectors.toList());
     }
-
-    @Transactional(readOnly = true)
-    public long contarPrediosAsignadosAOperario(Contrato contrato, Usuario operario) {
-        return contratoPredioRepository.countByContratoAndOperario(contrato, operario);
-    }
-
     @Transactional(readOnly = true)
     public long contarPrediosAsignados(Contrato contrato) {
-        return contratoPredioRepository.countByContratoAndOperarioIsNotNull(contrato);
+        return predioOperarioRepository.countByContratoAndActivoTrue(contrato);
     }
 
     @Transactional(readOnly = true)
     public long contarPrediosSinAsignar(Contrato contrato) {
-        return contratoPredioRepository.countByContratoAndOperarioIsNull(contrato);
+        long totalPredios = contratoPredioRepository.countByContrato(contrato);
+        long prediosAsignados = predioOperarioRepository.countByContratoAndActivoTrue(contrato);
+        return totalPredios - prediosAsignados;
+    }
+
+    @Transactional(readOnly = true)
+    public List<Usuario> obtenerOperariosDelContrato(Contrato contrato) {
+        return predioOperarioRepository.findOperariosByContrato(contrato);
     }
 }

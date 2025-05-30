@@ -127,7 +127,9 @@ public class Contrato {
     public boolean estaVencido() {
         return LocalDate.now().isAfter(fechaFin);
     }
-
+    public List<ContratoPredio> getPredios() {
+        return contratoPredios;
+    }
     public boolean estaVigente() {
         LocalDate hoy = LocalDate.now();
         return !hoy.isBefore(fechaInicio) && !hoy.isAfter(fechaFin) && estaActivo();

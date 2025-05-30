@@ -7,6 +7,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import co.empresa.gestioncontratos.dto.AsignacionMasivaDTO;
 import co.empresa.gestioncontratos.entity.Contrato;
 import co.empresa.gestioncontratos.entity.ContratoPredio;
 import co.empresa.gestioncontratos.entity.Usuario;
@@ -18,6 +19,7 @@ import co.empresa.gestioncontratos.service.UsuarioService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.http.ResponseEntity;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/admin/contratos")
@@ -47,7 +49,7 @@ public class ContratoController {
                 break;
             case OPERARIO:
                 // Los operarios ven contratos donde tienen predios asignados
-                contratos = contratoService.listarPorOperario(usuarioActual);
+                contratos = contratoService.listarContratoPorOperario(usuarioActual);
                 break;
             default:
                 contratos = new ArrayList<>();
@@ -76,12 +78,12 @@ public class ContratoController {
         Map<String, Object> estadisticas = contratoService.obtenerEstadisticas(contrato);
         
         // Obtener todos los operarios asignados al contrato (a través de los predios)
-        List<Usuario> operariosAsignados = contratoService.obtenerOperariosDelContrato(contrato);
+     //   List<Usuario> operariosAsignados = contratoService.listarPorOperario(contrato);
         
         // Cargar listas para asignación según permisos
         model.addAttribute("contrato", contrato);
         model.addAttribute("estadisticas", estadisticas);
-        model.addAttribute("operariosAsignados", operariosAsignados);
+     //   model.addAttribute("operariosAsignados", operariosAsignados);
         
         // Solo ADMIN puede asignar supervisores
         if (usuarioActual.getPerfil() == PerfilUsuario.ADMINISTRADOR) {
@@ -360,11 +362,10 @@ public class ContratoController {
             case COORDINADOR:
                 return contrato.getCoordinadores().stream()
                     .anyMatch(coord -> coord.getId().equals(usuario.getId()));
-            case OPERARIO:
+       /*      case OPERARIO:
                 // Operario puede ver si tiene al menos un predio asignado
                 return contrato.getPredios().stream()
-                    .anyMatch(cp -> cp.getOperario() != null && 
-                             cp.getOperario().getId().equals(usuario.getId()));
+                    .anyMatch(cp -> cp.getOperario() != null &&  cp.getOperario().getId().equals(usuario.getId()));*/
             default:
                 return false;
         }
@@ -405,38 +406,4 @@ public class ContratoController {
     }
 }
 
-// DTO para asignación masiva
-class AsignacionMasivaDTO {
-    private List<AsignacionPredioOperario> asignaciones;
-    
-    // getters y setters
-    public List<AsignacionPredioOperario> getAsignaciones() {
-        return asignaciones;
-    }
-    
-    public void setAsignaciones(List<AsignacionPredioOperario> asignaciones) {
-        this.asignaciones = asignaciones;
-    }
-}
 
-class AsignacionPredioOperario {
-    private UUID predioUuid;
-    private UUID operarioUuid;
-    
-    // getters y setters
-    public UUID getPredioUuid() {
-        return predioUuid;
-    }
-    
-    public void setPredioUuid(UUID predioUuid) {
-        this.predioUuid = predioUuid;
-    }
-    
-    public UUID getOperarioUuid() {
-        return operarioUuid;
-    }
-    
-    public void setOperarioUuid(UUID operarioUuid) {
-        this.operarioUuid = operarioUuid;
-    }
-}

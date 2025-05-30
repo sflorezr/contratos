@@ -164,9 +164,18 @@ loadScripts(document, 'script');</script>
 <div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#existeUsername(java.lang.String,java.util.UUID)" class="member-name-link">existeUsername</a><wbr>(<a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;username,
  <a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/UUID.html" title="class or interface in java.util" class="external-link">UUID</a>&nbsp;uuidExcluir)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>org.springframework.data.domain.Page<wbr>&lt;<a href="../entity/Usuario.html" title="class in co.empresa.gestioncontratos.entity">Usuario</a>&gt;</code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#listarTodos(org.springframework.data.domain.Pageable)" class="member-name-link">listarTodos</a><wbr>(org.springframework.data.domain.Pageable&nbsp;pageable)</code></div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/List.html" title="class or interface in java.util" class="external-link">List</a><wbr>&lt;<a href="../entity/Usuario.html" title="class in co.empresa.gestioncontratos.entity">Usuario</a>&gt;</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#findCoordinadoresActivos()" class="member-name-link">findCoordinadoresActivos</a>()</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
+<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/List.html" title="class or interface in java.util" class="external-link">List</a><wbr>&lt;<a href="../entity/Usuario.html" title="class in co.empresa.gestioncontratos.entity">Usuario</a>&gt;</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#findOperariosActivos()" class="member-name-link">findOperariosActivos</a>()</code></div>
+<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/List.html" title="class or interface in java.util" class="external-link">List</a><wbr>&lt;<a href="../entity/Usuario.html" title="class in co.empresa.gestioncontratos.entity">Usuario</a>&gt;</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#findSupervisoresActivos()" class="member-name-link">findSupervisoresActivos</a>()</code></div>
+<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
+<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>org.springframework.data.domain.Page<wbr>&lt;<a href="../entity/Usuario.html" title="class in co.empresa.gestioncontratos.entity">Usuario</a>&gt;</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#listarTodos(org.springframework.data.domain.Pageable)" class="member-name-link">listarTodos</a><wbr>(org.springframework.data.domain.Pageable&nbsp;pageable)</code></div>
+<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
 </div>
 </div>
 </div>
@@ -294,6 +303,27 @@ loadScripts(document, 'script');</script>
 <section class="detail" id="convertirADTO(co.empresa.gestioncontratos.entity.Usuario)">
 <h3>convertirADTO</h3>
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type"><a href="../dto/UsuarioDTO.html" title="class in co.empresa.gestioncontratos.dto">UsuarioDTO</a></span>&nbsp;<span class="element-name">convertirADTO</span><wbr><span class="parameters">(<a href="../entity/Usuario.html" title="class in co.empresa.gestioncontratos.entity">Usuario</a>&nbsp;usuario)</span></div>
+</section>
+</li>
+<li>
+<section class="detail" id="findSupervisoresActivos()">
+<h3>findSupervisoresActivos</h3>
+<div class="member-signature"><span class="annotations">@Transactional(readOnly=true)
+</span><span class="modifiers">public</span>&nbsp;<span class="return-type"><a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/List.html" title="class or interface in java.util" class="external-link">List</a>&lt;<a href="../entity/Usuario.html" title="class in co.empresa.gestioncontratos.entity">Usuario</a>&gt;</span>&nbsp;<span class="element-name">findSupervisoresActivos</span>()</div>
+</section>
+</li>
+<li>
+<section class="detail" id="findCoordinadoresActivos()">
+<h3>findCoordinadoresActivos</h3>
+<div class="member-signature"><span class="annotations">@Transactional(readOnly=true)
+</span><span class="modifiers">public</span>&nbsp;<span class="return-type"><a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/List.html" title="class or interface in java.util" class="external-link">List</a>&lt;<a href="../entity/Usuario.html" title="class in co.empresa.gestioncontratos.entity">Usuario</a>&gt;</span>&nbsp;<span class="element-name">findCoordinadoresActivos</span>()</div>
+</section>
+</li>
+<li>
+<section class="detail" id="findOperariosActivos()">
+<h3>findOperariosActivos</h3>
+<div class="member-signature"><span class="annotations">@Transactional(readOnly=true)
+</span><span class="modifiers">public</span>&nbsp;<span class="return-type"><a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/List.html" title="class or interface in java.util" class="external-link">List</a>&lt;<a href="../entity/Usuario.html" title="class in co.empresa.gestioncontratos.entity">Usuario</a>&gt;</span>&nbsp;<span class="element-name">findOperariosActivos</span>()</div>
 </section>
 </li>
 </ul>

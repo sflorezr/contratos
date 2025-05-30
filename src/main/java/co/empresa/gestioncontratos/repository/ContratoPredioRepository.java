@@ -19,28 +19,15 @@ public interface ContratoPredioRepository extends JpaRepository<ContratoPredio, 
     
     List<ContratoPredio> findByContrato(Contrato contrato);
     
+    List<ContratoPredio> findByContratoAndActivoTrue(Contrato contrato);
+    
     List<ContratoPredio> findByPredio(Predio predio);
     
     List<ContratoPredio> findByPredioOrderByFechaCreacionDesc(Predio predio);
     
-    List<ContratoPredio> findByOperario(Usuario operario);
-    
-    List<ContratoPredio> findByContratoAndOperario(Contrato contrato, Usuario operario);
-    
-    @Query("SELECT DISTINCT cp.operario FROM ContratoPredio cp " +
-           "WHERE cp.contrato = :contrato AND cp.operario IS NOT NULL")
-    List<Usuario> findOperariosDelContrato(@Param("contrato") Contrato contrato);
-    
-    @Query("SELECT cp.predio FROM ContratoPredio cp WHERE cp.operario = :operario")
-    List<Predio> findPrediosByOperario(@Param("operario") Usuario operario);
-    
-    @Query("SELECT cp.predio FROM ContratoPredio cp " +
-           "WHERE cp.operario = :operario AND cp.contrato.uuid = :contratoUuid")
-    List<Predio> findPrediosByOperarioAndContratoUuid(@Param("operario") Usuario operario, 
-                                                      @Param("contratoUuid") UUID contratoUuid);
-    
     @Query("SELECT cp FROM ContratoPredio cp " +
            "WHERE cp.predio = :predio AND cp.contrato.estado = 'ACTIVO' " +
+           "AND cp.activo = true " +
            "ORDER BY cp.fechaCreacion DESC")
     Optional<ContratoPredio> findActiveByPredio(@Param("predio") Predio predio);
     
@@ -50,11 +37,7 @@ public interface ContratoPredioRepository extends JpaRepository<ContratoPredio, 
     
     long countByContrato(Contrato contrato);
     
-    long countByContratoAndOperarioIsNotNull(Contrato contrato);
-    
-    long countByContratoAndOperarioIsNull(Contrato contrato);
-    
-    long countByContratoAndOperario(Contrato contrato, Usuario operario);
+    long countByContratoAndActivoTrue(Contrato contrato);
     
     long countByContratoAndEstado(Contrato contrato, EstadoPredio estado);
 }

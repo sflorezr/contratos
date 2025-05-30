@@ -3,7 +3,8 @@ package co.empresa.gestioncontratos.enums;
 public enum EstadoPredio {
     ACTIVO("Activo"),
     FINALIZADO("Finalizado"),
-    SUSPENDIDO("Suspendido");
+    PENDIENTE("Pendiente"),
+    SUSPENDIDO("Suspendido"), ASIGNADO("Asignado"), COMPLETADO("Completado");
 
     private final String descripcion;
 

@@ -12,6 +12,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -336,5 +337,20 @@ public class UsuarioService {
                 .perfil(usuario.getPerfil())
                 .activo(usuario.getActivo())
                 .build();
+    }
+    @Transactional(readOnly = true)
+    public List<Usuario> findSupervisoresActivos() {
+        log.info("Buscando supervisores activos");
+        return usuarioRepository.findSupervisoresActivos();
+    }
+    @Transactional(readOnly = true)
+    public List<Usuario> findCoordinadoresActivos() {
+        log.info("Buscando coordinadores activos");
+        return usuarioRepository.findCoordinadoresActivos();
+    }    
+    @Transactional(readOnly = true)
+    public List<Usuario> findOperariosActivos() {
+        log.info("Buscando operarios activos");
+        return usuarioRepository.findOperariosActivos();
     }
 }
