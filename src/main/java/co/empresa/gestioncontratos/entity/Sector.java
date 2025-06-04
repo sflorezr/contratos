@@ -2,6 +2,7 @@ package co.empresa.gestioncontratos.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -35,6 +36,11 @@ public class Sector {
     
     @Column(columnDefinition = "TEXT")
     private String descripcion;
+
+    @NotNull
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "zona_id", nullable = false)
+    private Zona zona;
     
     @Column(name = "limite_norte", length = 200)
     private String limiteNorte;

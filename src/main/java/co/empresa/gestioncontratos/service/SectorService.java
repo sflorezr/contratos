@@ -217,11 +217,6 @@ public class SectorService {
         prediosPorTipo.put("rurales", predioRepository.countBySectorAndTipo(sector, TipoPredio.RURAL));
         stats.put("prediosPorTipo", prediosPorTipo);
         
-        // Contratos
-        long contratosActivos = contratoRepository.countBySectorAndEstado(sector, EstadoContrato.ACTIVO);
-        long totalContratos = contratoRepository.countBySector(sector);
-        stats.put("contratosActivos", contratosActivos);
-        stats.put("totalContratos", totalContratos);
         
         // Área total de predios
         Double areaTotalPredios = predioRepository.sumAreaBySector(sector);
@@ -242,7 +237,6 @@ public class SectorService {
             resumen.put("nombre", sector.getNombre());
             resumen.put("codigo", sector.getCodigo());
             resumen.put("totalPredios", predioRepository.countBySector(sector));
-            resumen.put("contratosActivos", contratoRepository.countBySectorAndEstado(sector, EstadoContrato.ACTIVO));
             resumen.put("area", sector.getArea());
             resumen.put("poblacion", sector.getPoblacion());
             
@@ -267,10 +261,6 @@ public class SectorService {
             return true;
         }
         
-        // Verificar si tiene contratos
-        if (contratoRepository.existsBySector(sector)) {
-            return true;
-        }
         
         return false;
     }
@@ -320,7 +310,7 @@ public class SectorService {
         resumen.put("inactivos", sectorRepository.countByActivoFalse());
         resumen.put("conPredios", sectorRepository.countSectoresConPredios());
         resumen.put("conContratos", sectorRepository.countSectoresConContratos());
-        resumen.put("sinActividad", sectorRepository.countSectoresSinActividad());
+        resumen.put("sinActividad", sectorRepository.countSectoresSinActividad());  
         
         return resumen;
     }
@@ -375,9 +365,38 @@ public class SectorService {
             data.put("poblacion", sector.getPoblacion());
             data.put("activo", sector.getActivo());
             data.put("totalPredios", predioRepository.countBySector(sector));
-            data.put("contratosActivos", contratoRepository.countBySectorAndEstado(sector, EstadoContrato.ACTIVO));
             
             return data;
         }).collect(Collectors.toList());
     }
-}
+    @Transactional(readOnly = true)
+    public List<SectorDTO> listarTodosConEstadisticas() {
+        log.info("Listando todos los sectores con estadísticas optimizado");
+        
+        // Una sola consulta para todos los sectores
+        List<Sector> sectores = sectorRepository.findAllByOrderByNombreAsc();
+        
+        // Una consulta para contar predios por sector
+        Map<Long, Long> prediosPorSector = predioRepository.countPrediosPorSector();
+        
+        // Una consulta para contar contratos activos por sector
+      
+        
+        // Mapear todo en memoria
+        return sectores.stream().map(sector -> {
+            SectorDTO dto = convertirADTO(sector);
+            dto.setTotalPredios(prediosPorSector.getOrDefault(sector.getId(), 0L));
+            return dto;
+        }).collect(Collectors.toList());
+    }
+    @Transactional(readOnly = true)
+    public List<SectorDTO> listarPorZona(Long zonaId) {
+        log.info("Listando sectores de la zona: {}", zonaId);
+        
+        List<Sector> sectores = sectorRepository.findByZonaIdOrderByNombreAsc(zonaId);
+        
+        return sectores.stream()
+            .map(this::convertirADTO)
+            .collect(Collectors.toList());
+    }
+    }

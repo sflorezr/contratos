@@ -35,6 +35,9 @@ public class Usuario implements UserDetails {
     @Column(unique = true, nullable = false)
     private UUID uuid;
 
+    @Column(columnDefinition = "TEXT")
+    private String foto; 
+
     @NotBlank
     @Column(unique = true, nullable = false, length = 50)
     private String username;

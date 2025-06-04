@@ -24,6 +24,7 @@ public class ContratoService {
     private final ContratoPredioRepository contratoPredioRepository;
     private final UsuarioRepository usuarioRepository;
     private final PredioRepository predioRepository;
+    private final ZonaRepository zonaRepository;
     private final SectorRepository sectorRepository;
     private final PlanTarifaRepository planTarifaRepository;
     private final PredioOperarioRepository predioOperarioRepository;
@@ -35,6 +36,13 @@ public class ContratoService {
         log.info("Listando todos los contratos");
         return contratoRepository.findAllByOrderByFechaInicioDesc();
     }
+
+    @Transactional(readOnly = true)
+    public List<Contrato> listarActivos() {
+        log.info("Listando todos los contratos activos");
+        return contratoRepository.findContratosActivos();
+    }
+
 
     @Transactional(readOnly = true)
     public Page<Contrato> listarTodosPaginado(Pageable pageable) {
@@ -94,8 +102,8 @@ public class ContratoService {
         Contrato contrato = Contrato.builder()
             .numeroContrato(contratoDTO.getCodigo())
             .objetivo(contratoDTO.getObjetivo())
-            .sector(sectorRepository.findByUuid(contratoDTO.getSectorUuid())
-                .orElseThrow(() -> new RuntimeException("Sector no encontrado")))
+            .zona(zonaRepository.findByUuid(contratoDTO.getZonaId())
+                .orElseThrow(() -> new RuntimeException("Zona no encontrada")))
             .fechaInicio(contratoDTO.getFechaInicio())
             .fechaFin(contratoDTO.getFechaFin())
             .planTarifa(planTarifaRepository.findByUuid(contratoDTO.getPlanTarifaUuid())
@@ -127,9 +135,9 @@ public class ContratoService {
         contrato.setFechaInicio(contratoDTO.getFechaInicio());
         contrato.setFechaFin(contratoDTO.getFechaFin());
         
-        if (contratoDTO.getSectorUuid() != null) {
-            contrato.setSector(sectorRepository.findByUuid(contratoDTO.getSectorUuid())
-                .orElseThrow(() -> new RuntimeException("Sector no encontrado")));
+        if (contratoDTO.getZonaId() != null) {
+            contrato.setZona(zonaRepository.findByUuid(contratoDTO.getZonaId())
+                .orElseThrow(() -> new RuntimeException("Zona no encontrada")));
         }
         
         if (contratoDTO.getPlanTarifaUuid() != null) {
@@ -262,11 +270,12 @@ public class ContratoService {
         long prediosAsignados = contratoPredioRepository.countByContratoAndEstado(contrato, EstadoPredio.ASIGNADO);
         long prediosPendientes = contratoPredioRepository.countByContratoAndEstado(contrato, EstadoPredio.PENDIENTE);
         long prediosCompletados = contratoPredioRepository.countByContratoAndEstado(contrato, EstadoPredio.COMPLETADO);
-        
         stats.put("totalPredios", totalPredios);
         stats.put("prediosAsignados", prediosAsignados);
         stats.put("prediosPendientes", prediosPendientes);
         stats.put("prediosCompletados", prediosCompletados);
+        stats.put("totalSectores", 1);
+        stats.put("sectoresActivos", 1);
         stats.put("porcentajeAsignacion", totalPredios > 0 ? (prediosAsignados * 100.0 / totalPredios) : 0);
         stats.put("porcentajeCompletado", totalPredios > 0 ? (prediosCompletados * 100.0 / totalPredios) : 0);
         
@@ -287,7 +296,7 @@ public class ContratoService {
         // Información básica del contrato
         resumen.put("codigo", contrato.getNumeroContrato());
         resumen.put("objetivo", contrato.getObjetivo());
-        resumen.put("sectorNombre", contrato.getNombreSector());
+        resumen.put("zonaNombre", contrato.getNombreZona());
         resumen.put("fechaInicio", contrato.getFechaInicio());
         resumen.put("fechaFin", contrato.getFechaFin());
         resumen.put("estado", contrato.getEstado());

@@ -185,24 +185,11 @@ public class SectorController {
         log.info("=== API: LISTANDO TODOS LOS SECTORES ===");
         
         try {
-            List<Sector> sectores = sectorService.listarTodos();
-            List<SectorDTO> sectoresDTO = sectores.stream()
-                .map(sector -> {
-                    SectorDTO dto = sectorService.convertirADTO(sector);
-                    // Agregar información adicional para la vista
-                    dto.setTotalPredios(sectorService.obtenerEstadisticas(sector.getUuid())
-                        .get("totalPredios") != null ? 
-                        ((Number) sectorService.obtenerEstadisticas(sector.getUuid())
-                        .get("totalPredios")).longValue() : 0L);
-                    dto.setContratosActivos(sectorService.obtenerEstadisticas(sector.getUuid())
-                        .get("contratosActivos") != null ? 
-                        ((Number) sectorService.obtenerEstadisticas(sector.getUuid())
-                        .get("contratosActivos")).longValue() : 0L);
-                    return dto;
-                })
-                .collect(Collectors.toList());
+            // Opción 1: Usar el método optimizado del servicio (RECOMENDADO)
+            List<SectorDTO> sectoresDTO = sectorService.listarTodosConEstadisticas();
             
             return ResponseEntity.ok(sectoresDTO);
+            
         } catch (Exception e) {
             log.error("Error al listar sectores: ", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -475,4 +462,19 @@ public class SectorController {
                 .body("Error al exportar sectores");
         }
     }
+    @GetMapping("/api/listar-simple")
+    @ResponseBody
+    public ResponseEntity<List<SectorDTO>> listarSectoresSimple() {
+        try {
+            List<Sector> sectores = sectorService.listarActivos();
+            List<SectorDTO> sectoresDTO = sectores.stream()
+                .map(sectorService::convertirADTO) // Sin estadísticas
+                .collect(Collectors.toList());
+            
+            return ResponseEntity.ok(sectoresDTO);
+        } catch (Exception e) {
+            log.error("Error al listar sectores: ", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }    
 }

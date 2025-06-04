@@ -1,149 +1,18 @@
 <!DOCTYPE html>
+
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>Gestión de Usuarios</title>
-    
     <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
-    
-    <style>
-        :root {
-            --primary: #667eea;
-            --secondary: #764ba2;
-        }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f8f9fa;
-        }
-        
-        .sidebar-menu {
-            position: fixed;
-            left: 0;
-            top: 0;
-            width: 250px;
-            height: 100vh;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
-            z-index: 1000;
-            overflow-y: auto;
-        }
-        
-        .sidebar-header {
-            padding: 20px;
-            text-align: center;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
-        
-        .sidebar-menu .nav-link {
-            color: rgba(255,255,255,0.8);
-            padding: 12px 20px;
-            transition: all 0.3s;
-            border: none;
-            display: block;
-            text-decoration: none;
-        }
-        
-        .sidebar-menu .nav-link:hover,
-        .sidebar-menu .nav-link.active {
-            background: rgba(255,255,255,0.1);
-            color: white;
-        }
-        
-        .main-area {
-            margin-left: 250px;
-            min-height: 100vh;
-        }
-        
-        .header-bar {
-            background: white;
-            padding: 15px 30px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .content-wrapper {
-            padding: 30px;
-        }
-        
-        .page-card {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            overflow: hidden;
-        }
-        
-        .page-card-header {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
-            padding: 20px;
-        }
-        
-        .btn-gradient {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-weight: 500;
-        }
-        
-        .btn-gradient:hover {
-            color: white;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-        }
-        
-        .avatar-circle {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-            font-size: 14px;
-        }
-        
-        .profile-badge {
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 500;
-        }
-        
-        .modal-custom .modal-header {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
-            border-radius: 12px 12px 0 0;
-        }
-        
-        .modal-custom .modal-content {
-            border: none;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        }
-        
-        .form-control:focus,
-        .form-select:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
-        }
-        
-        .password-section {
-            background-color: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 10px;
-        }
-    </style>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet" />
+
+    <link href="/css/usuarios.css" rel="stylesheet" />
 </head>
+
 <body>
     <!-- Sidebar -->
     <nav class="sidebar-menu">
@@ -152,35 +21,33 @@
             <h5 class="mb-0">Gestión Contratos</h5>
             <small>Panel Admin</small>
         </div>
-        
         <div class="mt-3">
-            <a href="/admin/dashboard" class="nav-link">
+            <a class="nav-link" href="/admin/dashboard">
                 <i class="fas fa-tachometer-alt me-2"></i>Dashboard
             </a>
-            <a href="/admin/usuarios" class="nav-link active">
+            <a class="nav-link active" href="/admin/usuarios">
                 <i class="fas fa-users me-2"></i>Usuarios
             </a>
-            <a href="/admin/contratos" class="nav-link">
+            <a class="nav-link" href="/admin/contratos">
                 <i class="fas fa-file-contract me-2"></i>Contratos
             </a>
-            <a href="/admin/predios" class="nav-link">
+            <a class="nav-link" href="/admin/predios">
                 <i class="fas fa-map-marker-alt me-2"></i>Predios
             </a>
-            <a href="/admin/sectores" class="nav-link">
+            <a class="nav-link" href="/admin/sectores">
                 <i class="fas fa-map me-2"></i>Sectores
             </a>
-            <a href="/admin/servicios" class="nav-link">
+            <a class="nav-link" href="/admin/servicios">
                 <i class="fas fa-cogs me-2"></i>Servicios
             </a>
-            <a href="/admin/actividades" class="nav-link">
+            <a class="nav-link" href="/admin/actividades">
                 <i class="fas fa-tasks me-2"></i>Actividades
             </a>
-            <a href="/logout" class="nav-link mt-4">
+            <a class="nav-link mt-4" href="/logout">
                 <i class="fas fa-sign-out-alt me-2"></i>Salir
             </a>
         </div>
     </nav>
-    
     <!-- Main Content -->
     <div class="main-area">
         <!-- Header -->
@@ -197,12 +64,10 @@
                 </div>
             </div>
         </div>
-        
         <!-- Content -->
         <div class="content-wrapper">
             <!-- Alerts -->
             <div id="alertsContainer"></div>
-            
             <!-- Main Card -->
             <div class="page-card">
                 <div class="page-card-header">
@@ -212,12 +77,11 @@
                                 <i class="fas fa-users me-2"></i>Lista de Usuarios
                             </h5>
                         </div>
-                        <button type="button" class="btn btn-light btn-sm" onclick="openNewUserModal()">
+                        <button class="btn btn-light btn-sm" onclick="openNewUserModal()" type="button">
                             <i class="fas fa-plus me-2"></i>Nuevo Usuario
                         </button>
                     </div>
                 </div>
-                
                 <div class="p-4">
                     <!-- Filtros -->
                     <div class="row mb-4">
@@ -231,11 +95,10 @@
                             </select>
                         </div>
                         <div class="col-md-8">
-                            <input type="text" class="form-control" id="filterSearch" 
-                                   placeholder="Buscar por nombre, username o email...">
+                            <input class="form-control" id="filterSearch"
+                                placeholder="Buscar por nombre, username o email..." type="text" />
                         </div>
                     </div>
-                    
                     <!-- Tabla -->
                     <div class="table-responsive">
                         <table class="table table-hover">
@@ -254,9 +117,8 @@
                             </tbody>
                         </table>
                     </div>
-                    
                     <!-- Loading -->
-                    <div id="loadingIndicator" class="text-center py-4 d-none">
+                    <div class="text-center py-4 d-none" id="loadingIndicator">
                         <div class="spinner-border text-primary" role="status">
                             <span class="visually-hidden">Cargando...</span>
                         </div>
@@ -265,7 +127,6 @@
             </div>
         </div>
     </div>
-    
     <!-- Modal Usuario -->
     <div class="modal fade modal-custom" id="modalUsuario" tabindex="-1">
         <div class="modal-dialog modal-lg">
@@ -274,22 +135,79 @@
                     <h5 class="modal-title" id="modalUsuarioTitle">
                         <i class="fas fa-user-plus me-2"></i>Nuevo Usuario
                     </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    <button class="btn-close btn-close-white" data-bs-dismiss="modal" type="button"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="userForm">
-                        <input type="hidden" id="userUuid" name="uuid">
-                        <input type="hidden" id="isEdit" name="isEdit" value="false">
-                        
+                    <form enctype="multipart/form-data" id="userForm">
+                        <input id="userUuid" name="uuid" type="hidden" />
+                        <input id="isEdit" name="isEdit" type="hidden" value="false" />
+                        <div class="photo-upload-section">
+                            <h6 class="mb-3">
+                                <i class="fas fa-camera me-2"></i>Foto de Perfil
+                            </h6>
+
+                            <div id="photoContainer">
+                                <div class="photo-placeholder" id="photoPlaceholder">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <img id="photoPreview" class="photo-preview d-none" alt="Foto de perfil">
+                            </div>
+
+                            <div class="photo-buttons">
+                                <button type="button" class="btn btn-outline-primary btn-sm"
+                                    onclick="selectPhotoFile()">
+                                    <i class="fas fa-upload me-1"></i>Subir Archivo
+                                </button>
+                                <button type="button" class="btn btn-outline-success btn-sm" onclick="openCamera()">
+                                    <i class="fas fa-camera me-1"></i>Tomar Foto
+                                </button>
+                                <button type="button" class="btn btn-outline-danger btn-sm d-none" id="removePhotoBtn"
+                                    onclick="removePhoto()">
+                                    <i class="fas fa-trash me-1"></i>Quitar
+                                </button>
+                            </div>
+
+                            <!-- Input file oculto -->
+                            <input type="file" id="photoFileInput" name="foto" accept="image/*" style="display: none;">
+
+                            <!-- Canvas oculto para procesar imágenes -->
+                            <canvas id="photoCanvas" style="display: none;"></canvas>
+
+                            <!-- Modal para cámara -->
+                            <div class="modal fade" id="cameraModal" tabindex="-1">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">
+                                                <i class="fas fa-camera me-2"></i>Tomar Foto
+                                            </h5>
+                                            <button type="button" class="btn-close" onclick="closeCamera()"></button>
+                                        </div>
+                                        <div class="modal-body text-center">
+                                            <video id="cameraVideo" class="camera-preview" autoplay playsinline></video>
+                                            <div class="camera-controls">
+                                                <button type="button" class="btn btn-success me-2"
+                                                    onclick="capturePhoto()">
+                                                    <i class="fas fa-camera me-1"></i>Capturar
+                                                </button>
+                                                <button type="button" class="btn btn-secondary" onclick="closeCamera()">
+                                                    <i class="fas fa-times me-1"></i>Cancelar
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label">Username <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="username" name="username" required>
+                                <input class="form-control" id="username" name="username" required="" type="text" />
                                 <div class="invalid-feedback">El username es requerido</div>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Perfil <span class="text-danger">*</span></label>
-                                <select class="form-select" id="perfil" name="perfil" required>
+                                <select class="form-select" id="perfil" name="perfil" required="">
                                     <option value="">Seleccionar...</option>
                                     <option value="ADMINISTRADOR">Administrador</option>
                                     <option value="SUPERVISOR">Supervisor</option>
@@ -300,25 +218,24 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Nombre <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="nombre" name="nombre" required>
+                                <input class="form-control" id="nombre" name="nombre" required="" type="text" />
                                 <div class="invalid-feedback">El nombre es requerido</div>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Apellido <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="apellido" name="apellido" required>
+                                <input class="form-control" id="apellido" name="apellido" required="" type="text" />
                                 <div class="invalid-feedback">El apellido es requerido</div>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Email <span class="text-danger">*</span></label>
-                                <input type="email" class="form-control" id="email" name="email" required>
+                                <input class="form-control" id="email" name="email" required="" type="email" />
                                 <div class="invalid-feedback">El email es requerido y debe ser válido</div>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Teléfono</label>
-                                <input type="tel" class="form-control" id="telefono" name="telefono">
+                                <input class="form-control" id="telefono" name="telefono" type="tel" />
                             </div>
                         </div>
-                        
                         <!-- Sección de contraseña -->
                         <div class="password-section mt-3" id="passwordSection">
                             <h6 class="mb-3">
@@ -327,13 +244,16 @@
                             </h6>
                             <div class="row g-3">
                                 <div class="col-md-6">
-                                    <label class="form-label">Contraseña <span class="text-danger" id="passwordRequired">*</span></label>
-                                    <input type="password" class="form-control" id="password" name="password">
+                                    <label class="form-label">Contraseña <span class="text-danger"
+                                            id="passwordRequired">*</span></label>
+                                    <input class="form-control" id="password" name="password" type="password" />
                                     <div class="invalid-feedback">La contraseña es requerida</div>
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label">Confirmar Contraseña <span class="text-danger" id="confirmPasswordRequired">*</span></label>
-                                    <input type="password" class="form-control" id="confirmPassword" name="confirmPassword">
+                                    <label class="form-label">Confirmar Contraseña <span class="text-danger"
+                                            id="confirmPasswordRequired">*</span></label>
+                                    <input class="form-control" id="confirmPassword" name="confirmPassword"
+                                        type="password" />
                                     <div class="invalid-feedback">Las contraseñas no coinciden</div>
                                 </div>
                             </div>
@@ -345,491 +265,19 @@
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-gradient" id="saveUserBtn">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal" type="button">Cancelar</button>
+                    <button class="btn btn-gradient" id="saveUserBtn" type="button">
                         <i class="fas fa-save me-2"></i>Guardar
                     </button>
                 </div>
             </div>
         </div>
     </div>
-    
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <script>
-        // Estado de la aplicación
-        let usuarios = [];
-        let modal = null;
-        let currentEditUuid = null;
-        
-        // Inicializar cuando el DOM esté listo
-        document.addEventListener('DOMContentLoaded', function() {
-            modal = new bootstrap.Modal(document.getElementById('modalUsuario'));
-            setupEventListeners();
-            loadUsuarios();
-        });
-        
-        // Configurar event listeners
-        function setupEventListeners() {
-            document.getElementById('saveUserBtn').addEventListener('click', saveUser);
-            document.getElementById('filterPerfil').addEventListener('change', applyFilters);
-            document.getElementById('filterSearch').addEventListener('input', debounce(applyFilters, 500));
-            
-            // Validación en tiempo real
-            document.getElementById('username').addEventListener('blur', validateUsername);
-            document.getElementById('email').addEventListener('blur', validateEmail);
-            document.getElementById('confirmPassword').addEventListener('input', validatePasswords);
-            document.getElementById('password').addEventListener('input', validatePasswords);
-        }
-        
-        // Abrir modal para nuevo usuario
-        function openNewUserModal() {
-            currentEditUuid = null;
-            document.getElementById('isEdit').value = 'false';
-            document.getElementById('modalUsuarioTitle').innerHTML = '<i class="fas fa-user-plus me-2"></i>Nuevo Usuario';
-            document.getElementById('userForm').reset();
-            
-            // Mostrar campos de contraseña como requeridos
-            document.getElementById('password').required = true;
-            document.getElementById('confirmPassword').required = true;
-            document.getElementById('passwordRequired').style.display = 'inline';
-            document.getElementById('confirmPasswordRequired').style.display = 'inline';
-            document.getElementById('passwordHint').classList.add('d-none');
-            document.getElementById('passwordSectionTitle').textContent = 'Contraseña';
-            
-            // Limpiar validaciones
-            document.getElementById('userForm').classList.remove('was-validated');
-            clearFieldErrors();
-            
-            modal.show();
-        }
-        
-        // Abrir modal para editar usuario
-        async function editUser(uuid) {
-            currentEditUuid = uuid;
-            document.getElementById('isEdit').value = 'true';
-            document.getElementById('userUuid').value = uuid;
-            document.getElementById('modalUsuarioTitle').innerHTML = '<i class="fas fa-user-edit me-2"></i>Editar Usuario';
-            
-            // Buscar usuario en la lista local
-            const usuario = usuarios.find(u => u.uuid === uuid);
-            if (!usuario) {
-                showAlert('Usuario no encontrado', 'danger');
-                return;
-            }
-            
-            // Llenar el formulario
-            document.getElementById('username').value = usuario.username;
-            document.getElementById('perfil').value = usuario.perfil;
-            document.getElementById('nombre').value = usuario.nombre;
-            document.getElementById('apellido').value = usuario.apellido;
-            document.getElementById('email').value = usuario.email;
-            document.getElementById('telefono').value = usuario.telefono || '';
-            
-            // Configurar campos de contraseña para edición
-            document.getElementById('password').value = '';
-            document.getElementById('confirmPassword').value = '';
-            document.getElementById('password').required = false;
-            document.getElementById('confirmPassword').required = false;
-            document.getElementById('passwordRequired').style.display = 'none';
-            document.getElementById('confirmPasswordRequired').style.display = 'none';
-            document.getElementById('passwordHint').classList.remove('d-none');
-            document.getElementById('passwordSectionTitle').textContent = 'Cambiar Contraseña (Opcional)';
-            
-            // Limpiar validaciones
-            document.getElementById('userForm').classList.remove('was-validated');
-            clearFieldErrors();
-            
-            modal.show();
-        }
-        
-        // Cargar usuarios desde el servidor
-        async function loadUsuarios() {
-            showLoading(true);
-            try {
-                const response = await fetch('/admin/usuarios/api/buscar');
-                if (response.ok) {
-                    const data = await response.json();
-                    usuarios = data.content || [];
-                    renderUsuarios();
-                } else {
-                    showAlert('Error al cargar usuarios', 'danger');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                showAlert('Error de conexión', 'danger');
-            } finally {
-                showLoading(false);
-            }
-        }
-        
-        // Renderizar tabla de usuarios
-        function renderUsuarios() {
-            const tbody = document.getElementById('usuariosTableBody');
-            
-            if (usuarios.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="6" class="text-center py-4">
-                            <i class="fas fa-users fa-3x text-muted mb-3 d-block"></i>
-                            <span class="text-muted">No hay usuarios</span>
-                        </td>
-                    </tr>
-                `;
-                return;
-            }
-            
-            tbody.innerHTML = usuarios.map(usuario => `
-                <tr>
-                    <td>
-                        <div class="d-flex align-items-center">
-                            <div class="avatar-circle me-2" style="width: 30px; height: 30px; font-size: 12px;">
-                                ${getInitials(usuario.nombre, usuario.apellido)}
-                            </div>
-                            <strong>${usuario.username}</strong>
-                        </div>
-                    </td>
-                    <td>${usuario.nombre} ${usuario.apellido}</td>
-                    <td>${usuario.email}</td>
-                    <td><span class="badge profile-badge ${getPerfilColor(usuario.perfil)}">${getPerfilText(usuario.perfil)}</span></td>
-                    <td><span class="badge ${usuario.activo ? 'bg-success' : 'bg-secondary'}">${usuario.activo ? 'Activo' : 'Inactivo'}</span></td>
-                    <td>
-                        <button class="btn btn-sm btn-outline-primary me-1" onclick="editUser('${usuario.uuid}')" title="Editar">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="btn btn-sm btn-outline-warning me-1" onclick="toggleUserStatus('${usuario.uuid}')" title="Cambiar Estado">
-                            <i class="fas fa-toggle-${usuario.activo ? 'on' : 'off'}"></i>
-                        </button>
-                        <button class="btn btn-sm btn-outline-danger" onclick="deleteUser('${usuario.uuid}')" title="Eliminar">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-        
-        // Guardar usuario (crear o editar)
-        async function saveUser() {
-            const form = document.getElementById('userForm');
-            const isEdit = document.getElementById('isEdit').value === 'true';
-            
-            // Validar formulario
-            if (!validateForm()) {
-                return;
-            }
-            
-            const formData = new FormData(form);
-            
-            const saveBtn = document.getElementById('saveUserBtn');
-            const originalText = saveBtn.innerHTML;
-            saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Guardando...';
-            saveBtn.disabled = true;
-            
-            try {
-                const url = isEdit 
-                    ? `/admin/usuarios/${currentEditUuid}/editar` 
-                    : '/admin/usuarios/nuevo';
-                    
-                const response = await fetch(url, {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                if (response.redirected) {
-                    // Si hay redirección, recargar la página
-                    window.location.href = response.url;
-                } else if (response.ok) {
-                    modal.hide();
-                    showAlert(isEdit ? 'Usuario actualizado exitosamente' : 'Usuario creado exitosamente', 'success');
-                    loadUsuarios();
-                } else {
-                    const text = await response.text();
-                    showAlert('Error al guardar usuario', 'danger');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                showAlert('Error de conexión', 'danger');
-            } finally {
-                saveBtn.innerHTML = originalText;
-                saveBtn.disabled = false;
-            }
-        }
-        
-        // Validar formulario
-        function validateForm() {
-            const form = document.getElementById('userForm');
-            const isEdit = document.getElementById('isEdit').value === 'true';
-            
-            // Validar campos requeridos
-            let isValid = true;
-            
-            // Username
-            const username = document.getElementById('username');
-            if (!username.value.trim()) {
-                setFieldError(username, 'El username es requerido');
-                isValid = false;
-            }
-            
-            // Email
-            const email = document.getElementById('email');
-            if (!email.value.trim() || !email.value.includes('@')) {
-                setFieldError(email, 'El email es requerido y debe ser válido');
-                isValid = false;
-            }
-            
-            // Nombre
-            const nombre = document.getElementById('nombre');
-            if (!nombre.value.trim()) {
-                setFieldError(nombre, 'El nombre es requerido');
-                isValid = false;
-            }
-            
-            // Apellido
-            const apellido = document.getElementById('apellido');
-            if (!apellido.value.trim()) {
-                setFieldError(apellido, 'El apellido es requerido');
-                isValid = false;
-            }
-            
-            // Perfil
-            const perfil = document.getElementById('perfil');
-            if (!perfil.value) {
-                setFieldError(perfil, 'El perfil es requerido');
-                isValid = false;
-            }
-            
-            // Contraseñas
-            const password = document.getElementById('password').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
-            
-            if (!isEdit && !password) {
-                setFieldError(document.getElementById('password'), 'La contraseña es requerida');
-                isValid = false;
-            }
-            
-            if (password && password !== confirmPassword) {
-                setFieldError(document.getElementById('confirmPassword'), 'Las contraseñas no coinciden');
-                isValid = false;
-            }
-            
-            form.classList.add('was-validated');
-            return isValid;
-        }
-        
-        // Validar username único
-        async function validateUsername() {
-            const username = document.getElementById('username').value.trim();
-            if (!username) return;
-            
-            const uuid = currentEditUuid || null;
-            
-            try {
-                const response = await fetch(`/admin/usuarios/api/validar-username?username=${encodeURIComponent(username)}&uuid=${uuid || ''}`);
-                const data = await response.json();
-                
-                if (!data.disponible) {
-                    setFieldError(document.getElementById('username'), 'Este username ya está en uso');
-                } else {
-                    clearFieldError(document.getElementById('username'));
-                }
-            } catch (error) {
-                console.error('Error validando username:', error);
-            }
-        }
-        
-        // Validar email único
-        async function validateEmail() {
-            const email = document.getElementById('email').value.trim();
-            if (!email) return;
-            
-            const uuid = currentEditUuid || null;
-            
-            try {
-                const response = await fetch(`/admin/usuarios/api/validar-email?email=${encodeURIComponent(email)}&uuid=${uuid || ''}`);
-                const data = await response.json();
-                
-                if (!data.disponible) {
-                    setFieldError(document.getElementById('email'), 'Este email ya está en uso');
-                } else {
-                    clearFieldError(document.getElementById('email'));
-                }
-            } catch (error) {
-                console.error('Error validando email:', error);
-            }
-        }
-        
-        // Validar que las contraseñas coincidan
-        function validatePasswords() {
-            const password = document.getElementById('password').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
-            
-            if (password && confirmPassword && password !== confirmPassword) {
-                setFieldError(document.getElementById('confirmPassword'), 'Las contraseñas no coinciden');
-            } else if (confirmPassword) {
-                clearFieldError(document.getElementById('confirmPassword'));
-            }
-        }
-        
-        // Cambiar estado de usuario
-        async function toggleUserStatus(uuid) {
-            if (!confirm('¿Desea cambiar el estado del usuario?')) return;
-            
-            try {
-                const response = await fetch(`/admin/usuarios/${uuid}/cambiar-estado`, {
-                    method: 'POST'
-                });
-                
-                if (response.ok) {
-                    showAlert('Estado cambiado exitosamente', 'success');
-                    loadUsuarios();
-                } else {
-                    showAlert('Error al cambiar estado', 'danger');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                showAlert('Error de conexión', 'danger');
-            }
-        }
-        
-        // Eliminar usuario
-        async function deleteUser(uuid) {
-            const usuario = usuarios.find(u => u.uuid === uuid);
-            if (!usuario) return;
-            
-            if (!confirm(`¿Está seguro de eliminar al usuario ${usuario.username}?\n\nEsta acción no se puede deshacer.`)) {
-                return;
-            }
-            
-            try {
-                const response = await fetch(`/admin/usuarios/${uuid}`, {
-                    method: 'DELETE'
-                });
-                
-                if (response.ok) {
-                    showAlert('Usuario eliminado exitosamente', 'success');
-                    loadUsuarios();
-                } else {
-                    const data = await response.json();
-                    showAlert(data.message || 'Error al eliminar usuario', 'danger');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                showAlert('Error de conexión', 'danger');
-            }
-        }
-        
-        // Aplicar filtros
-        function applyFilters() {
-            const perfilFilter = document.getElementById('filterPerfil').value;
-            const searchFilter = document.getElementById('filterSearch').value.toLowerCase();
-            
-            const filtered = usuarios.filter(usuario => {
-                const matchesPerfil = !perfilFilter || usuario.perfil === perfilFilter;
-                const matchesSearch = !searchFilter || 
-                    usuario.nombre.toLowerCase().includes(searchFilter) ||
-                    usuario.apellido.toLowerCase().includes(searchFilter) ||
-                    usuario.username.toLowerCase().includes(searchFilter) ||
-                    usuario.email.toLowerCase().includes(searchFilter);
-                
-                return matchesPerfil && matchesSearch;
-            });
-            
-            // Temporalmente actualizar la lista para el filtro
-            const originalUsuarios = usuarios;
-            usuarios = filtered;
-            renderUsuarios();
-            usuarios = originalUsuarios;
-        }
-        
-        // Utilidades para manejo de errores en campos
-        function setFieldError(field, message) {
-            field.classList.add('is-invalid');
-            const feedback = field.nextElementSibling;
-            if (feedback && feedback.classList.contains('invalid-feedback')) {
-                feedback.textContent = message;
-            }
-        }
-        
-        function clearFieldError(field) {
-            field.classList.remove('is-invalid');
-        }
-        
-        function clearFieldErrors() {
-            document.querySelectorAll('.is-invalid').forEach(field => {
-                field.classList.remove('is-invalid');
-            });
-        }
-        
-        // Utilidades
-        function getInitials(nombre, apellido) {
-            return ((nombre || '').charAt(0) + (apellido || '').charAt(0)).toUpperCase();
-        }
-        
-        function getPerfilColor(perfil) {
-            const colors = {
-                'ADMINISTRADOR': 'bg-danger',
-                'SUPERVISOR': 'bg-warning',
-                'COORDINADOR': 'bg-info',
-                'OPERARIO': 'bg-primary'
-            };
-            return colors[perfil] || 'bg-secondary';
-        }
-        
-        function getPerfilText(perfil) {
-            const texts = {
-                'ADMINISTRADOR': 'Admin',
-                'SUPERVISOR': 'Supervisor',
-                'COORDINADOR': 'Coordinador',
-                'OPERARIO': 'Operario'
-            };
-            return texts[perfil] || perfil;
-        }
-        
-        function showAlert(message, type) {
-            const container = document.getElementById('alertsContainer');
-            const alertId = 'alert-' + Date.now();
-            
-            const alertHtml = `
-                <div id="${alertId}" class="alert alert-${type} alert-dismissible fade show">
-                    <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'warning' ? 'exclamation-triangle' : 'times-circle'} me-2"></i>
-                    ${message}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            `;
-            
-            container.insertAdjacentHTML('afterbegin', alertHtml);
-            
-            // Auto-remove después de 5 segundos
-            setTimeout(() => {
-                const alert = document.getElementById(alertId);
-                if (alert) alert.remove();
-            }, 5000);
-        }
-        
-        function showLoading(show) {
-            const loading = document.getElementById('loadingIndicator');
-            const table = document.getElementById('usuariosTableBody');
-            
-            if (show) {
-                loading.classList.remove('d-none');
-                table.innerHTML = '';
-            } else {
-                loading.classList.add('d-none');
-            }
-        }
-        
-        function debounce(func, wait) {
-            let timeout;
-            return function executedFunction(...args) {
-                const later = () => {
-                    clearTimeout(timeout);
-                    func(...args);
-                };
-                clearTimeout(timeout);
-                timeout = setTimeout(later, wait);
-            };
-        }
-    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/usuarios.js"></script>
 </body>
+
 </html>

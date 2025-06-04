@@ -1,6 +1,7 @@
 package co.empresa.gestioncontratos.dto;
 
 import co.empresa.gestioncontratos.enums.PerfilUsuario;
+import jakarta.persistence.Column;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -11,6 +12,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.UUID;
+
+import org.springframework.web.multipart.MultipartFile;
 
 @Data
 @Builder
@@ -28,6 +31,9 @@ public class UsuarioDTO {
     private String password;
 
     private String confirmPassword;
+
+    @Size(max = 500000, message = "La foto no puede exceder 500KB")
+    private String foto; // Base64 de la imagen
 
     @NotBlank(message = "El nombre es obligatorio")
     @Size(max = 100, message = "El nombre no puede exceder 100 caracteres")

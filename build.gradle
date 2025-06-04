@@ -106,7 +106,8 @@ jar {
 bootJar {
     enabled = true
     archiveClassifier = 'boot'
-    mainClass = 'com.empresa.gestioncontratos.GestionContratosApplication'
+    mainClass = 'co.empresa.gestioncontratos.GestionContratosApplication'
+    archiveFileName = 'app.jar'
 }
 
 // Tarea personalizada para ejecutar la aplicación

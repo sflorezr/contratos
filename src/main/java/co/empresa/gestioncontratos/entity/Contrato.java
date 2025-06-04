@@ -40,8 +40,8 @@ public class Contrato {
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "sector_id", nullable = false)
-    private Sector sector;
+    @JoinColumn(name = "zona_id", nullable = false)
+    private Zona zona;
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY)
@@ -75,6 +75,7 @@ public class Contrato {
         joinColumns = @JoinColumn(name = "contrato_id"),
         inverseJoinColumns = @JoinColumn(name = "coordinador_id")
     )
+    
     private Set<Usuario> coordinadores = new HashSet<>();
     
     @CreationTimestamp
@@ -218,9 +219,8 @@ public class Contrato {
                 .count();
     }
 
-    // Método para obtener el nombre del sector
-    public String getNombreSector() {
-        return sector != null ? sector.getNombre() : "Sin sector";
+    public String getNombreZona() {
+        return zona != null ? zona.getNombre() : "Sin Zona";
     }
 
     // Método para obtener el nombre del plan de tarifa
@@ -239,9 +239,6 @@ public class Contrato {
     }
 
     // Método para verificar si puede ser eliminado
-    public boolean puedeSerEliminado() {
-        return !tieneCoordinadores() && !tienePredios();
-    }
 
     @Override
     public String toString() {

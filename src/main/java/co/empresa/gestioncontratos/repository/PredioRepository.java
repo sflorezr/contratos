@@ -11,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -65,5 +66,10 @@ public interface PredioRepository extends JpaRepository<Predio, Long>, JpaSpecif
     Double sumAreaBySector(@Param("sector") Sector sector);
 
     Optional<Predio> findByCodigoCatastral(String codigoCatastral);
-       boolean existsByCodigoCatastral(String codigoCatastral);
+    boolean existsByCodigoCatastral(String codigoCatastral);
+
+    @Query("SELECT p.sector.id, COUNT(p) FROM Predio p GROUP BY p.sector.id")
+       Map<Long, Long> countPrediosPorSector();
+
+
 }

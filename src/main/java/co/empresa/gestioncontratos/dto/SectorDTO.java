@@ -47,6 +47,9 @@ public class SectorDTO {
     private Long totalPredios;
     private Long contratosActivos;
     private Double areaPredios;
+    private Long zonaId;
+    private String zonaNombre;
+    private String zonaCodigo;
     
     // Método para limpiar espacios
     public void trim() {

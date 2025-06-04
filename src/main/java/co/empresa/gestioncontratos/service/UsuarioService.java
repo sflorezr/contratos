@@ -11,9 +11,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.UUID;
+
+import java.nio.file.*;
 
 @Service
 @RequiredArgsConstructor
@@ -87,26 +90,32 @@ public class UsuarioService {
 
     // ==================== OPERACIONES CRUD ====================
 
-    public Usuario crear(UsuarioDTO usuarioDTO) {
+   public Usuario crear(UsuarioDTO usuarioDTO, MultipartFile fotoFile) {
         log.info("=== INICIANDO CREACIÓN DE USUARIO ===");
         log.info("Datos recibidos: {}", usuarioDTO);
+        log.info("Foto recibida: {}", fotoFile != null ? fotoFile.getOriginalFilename() : "ninguna");
         
         try {
             // Limpiar espacios en blanco
             usuarioDTO.trim();
             
             log.info("Validando unicidad de username: {}", usuarioDTO.getUsername());
-            // Validar que no exista el username
             if (usuarioRepository.existsByUsernameAndActivoTrue(usuarioDTO.getUsername())) {
                 log.error("Username ya existe: {}", usuarioDTO.getUsername());
                 throw new RuntimeException("Ya existe un usuario con el username: " + usuarioDTO.getUsername());
             }
 
             log.info("Validando unicidad de email: {}", usuarioDTO.getEmail());
-            // Validar que no exista el email
             if (usuarioRepository.existsByEmailAndActivoTrue(usuarioDTO.getEmail())) {
                 log.error("Email ya existe: {}", usuarioDTO.getEmail());
                 throw new RuntimeException("Ya existe un usuario con el email: " + usuarioDTO.getEmail());
+            }
+
+            // Procesar foto si se proporciona
+            String fotoBase64 = null;
+            if (fotoFile != null && !fotoFile.isEmpty()) {
+                fotoBase64 = procesarFoto(fotoFile);
+                log.info("Foto procesada, tamaño: {} bytes", fotoBase64 != null ? fotoBase64.length() : 0);
             }
 
             // Hashear contraseña
@@ -121,6 +130,7 @@ public class UsuarioService {
                     .email(usuarioDTO.getEmail())
                     .telefono(usuarioDTO.getTelefono())
                     .perfil(usuarioDTO.getPerfil())
+                    .foto(fotoBase64)
                     .activo(true)
                     .build();
 
@@ -133,19 +143,6 @@ public class UsuarioService {
             log.info("✅ Usuario guardado con UUID: {}", usuarioGuardado.getUuid());
             log.info("✅ Usuario creado: {} ({})", usuarioGuardado.getUsername(), usuarioGuardado.getPerfil());
             
-            // Verificar que se guardó correctamente
-            Usuario verificacion = usuarioRepository.findById(usuarioGuardado.getId()).orElse(null);
-            if (verificacion != null) {
-                log.info("✅ VERIFICACIÓN: Usuario encontrado en BD con ID: {}, Username: {}", 
-                        verificacion.getId(), verificacion.getUsername());
-            } else {
-                log.error("❌ VERIFICACIÓN: Usuario NO encontrado en BD después de guardar");
-            }
-            
-            // Contar usuarios totales
-            long totalUsuarios = usuarioRepository.count();
-            log.info("📊 Total de usuarios en BD después de crear: {}", totalUsuarios);
-            
             return usuarioGuardado;
             
         } catch (Exception e) {
@@ -153,10 +150,36 @@ public class UsuarioService {
             throw new RuntimeException("Error al crear usuario: " + e.getMessage(), e);
         }
     }
-
-    public Usuario actualizar(UUID uuid, UsuarioDTO usuarioDTO) {
+    private String procesarFoto(MultipartFile archivo) {
+        try {
+            // Validar que sea una imagen
+            String tipoContenido = archivo.getContentType();
+            if (tipoContenido == null || !tipoContenido.startsWith("image/")) {
+                throw new RuntimeException("El archivo debe ser una imagen");
+            }
+            
+            // Validar tamaño (máximo 5MB)
+            if (archivo.getSize() > 5 * 1024 * 1024) {
+                throw new RuntimeException("La imagen no puede superar los 5MB");
+            }
+            
+            // Convertir a Base64
+            byte[] bytes = archivo.getBytes();
+            String base64 = "data:" + tipoContenido + ";base64," + 
+                        java.util.Base64.getEncoder().encodeToString(bytes);
+            
+            log.info("Foto procesada: tipo={}, tamaño={} bytes", tipoContenido, bytes.length);
+            return base64;
+            
+        } catch (Exception e) {
+            log.error("Error al procesar foto: ", e);
+            throw new RuntimeException("Error al procesar la foto: " + e.getMessage(), e);
+        }
+    }
+    public Usuario actualizar(UUID uuid, UsuarioDTO usuarioDTO, MultipartFile fotoFile) {
         log.info("=== ACTUALIZANDO USUARIO: {} ===", uuid);
         log.info("Nuevos datos: {}", usuarioDTO);
+        log.info("Foto recibida: {}", fotoFile != null ? fotoFile.getOriginalFilename() : "ninguna");
         
         try {
             Usuario usuario = buscarPorUuid(uuid);
@@ -173,6 +196,13 @@ public class UsuarioService {
             // Validar email único (excluyendo el usuario actual)
             if (usuarioRepository.existsByEmailAndIdNotAndActivoTrue(usuarioDTO.getEmail(), usuario.getId())) {
                 throw new RuntimeException("Ya existe otro usuario con el email: " + usuarioDTO.getEmail());
+            }
+
+            // Procesar nueva foto si se proporciona
+            if (fotoFile != null && !fotoFile.isEmpty()) {
+                String fotoBase64 = procesarFoto(fotoFile);
+                usuario.setFoto(fotoBase64);
+                log.info("Foto actualizada, tamaño: {} bytes", fotoBase64 != null ? fotoBase64.length() : 0);
             }
 
             // Actualizar campos
@@ -335,6 +365,7 @@ public class UsuarioService {
                 .email(usuario.getEmail())
                 .telefono(usuario.getTelefono())
                 .perfil(usuario.getPerfil())
+                .foto(usuario.getFoto()) // Agregar esta línea
                 .activo(usuario.getActivo())
                 .build();
     }

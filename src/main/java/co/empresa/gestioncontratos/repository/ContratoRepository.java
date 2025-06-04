@@ -1,8 +1,8 @@
 package co.empresa.gestioncontratos.repository;
 
 import co.empresa.gestioncontratos.entity.Contrato;
-import co.empresa.gestioncontratos.entity.Sector;
 import co.empresa.gestioncontratos.entity.Usuario;
+import co.empresa.gestioncontratos.entity.Zona;
 import co.empresa.gestioncontratos.enums.EstadoContrato;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -52,21 +53,29 @@ public interface ContratoRepository extends JpaRepository<Contrato, Long> {
     @Query("SELECT c FROM Contrato c WHERE c.estado = 'ACTIVO' AND c.fechaFin < CURRENT_DATE")
     List<Contrato> findContratosVencidos();
 
+    @Query("SELECT c FROM Contrato c WHERE c.estado = 'ACTIVO'")
+    List<Contrato> findContratosActivos();    
+
      @Query("SELECT COUNT(c) FROM Contrato c WHERE c.supervisor.id = :supervisorId")
     long countBySupervisorId(@Param("supervisorId") Long supervisorId);
     
     // Contar contratos por supervisor y estado
     @Query("SELECT COUNT(c) FROM Contrato c WHERE c.supervisor.id = :supervisorId AND c.estado = :estado")
     long countBySupervisorIdAndEstado(@Param("supervisorId") Long supervisorId, @Param("estado") EstadoContrato estado);
-    long countBySector(Sector sector);
+
+    long countByZona(Zona zona);
+
     
-    long countBySectorAndEstado(Sector sector, EstadoContrato estado);
-    
-    boolean existsBySector(Sector sector);
+    boolean existsByZona(Zona zona);
     @Query("SELECT DISTINCT c FROM Contrato c " +
         "JOIN c.contratoPredios cp " +
         "WHERE cp.operario = :operario " +
         "AND cp.activo = true " +
         "ORDER BY c.fechaInicio DESC")
     List<Contrato> findContratosConOperario(@Param("operario") Usuario operario);    
-}
+
+    @Query("SELECT c.zona.id, COUNT(c) FROM Contrato c WHERE c.estado = 'ACTIVO' GROUP BY c.zona.id")
+    Map<Long, Long> countContratosActivosPorZona();
+}   
+
+

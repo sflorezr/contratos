@@ -128,15 +128,18 @@ extends org.springframework.data.jpa.repository.JpaRepository&lt;<a href="../ent
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code>long</code></div>
 <div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#countByOperarioId(java.lang.Long)" class="member-name-link">countByOperarioId</a><wbr>(<a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Long.html" title="class or interface in java.lang" class="external-link">Long</a>&nbsp;operarioId)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3">&nbsp;</div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code>boolean</code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#existsByContratoPredio(co.empresa.gestioncontratos.entity.ContratoPredio)" class="member-name-link">existsByContratoPredio</a><wbr>(<a href="../entity/ContratoPredio.html" title="class in co.empresa.gestioncontratos.entity">ContratoPredio</a>&nbsp;contratoPredio)</code></div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code>long</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#countByServicio(co.empresa.gestioncontratos.entity.Servicio)" class="member-name-link">countByServicio</a><wbr>(<a href="../entity/Servicio.html" title="class in co.empresa.gestioncontratos.entity">Servicio</a>&nbsp;servicio)</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3">&nbsp;</div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code>boolean</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#existsByContratoPredio_Predio(co.empresa.gestioncontratos.entity.Predio)" class="member-name-link">existsByContratoPredio_Predio</a><wbr>(<a href="../entity/Predio.html" title="class in co.empresa.gestioncontratos.entity">Predio</a>&nbsp;predio)</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#existsByContratoPredio(co.empresa.gestioncontratos.entity.ContratoPredio)" class="member-name-link">existsByContratoPredio</a><wbr>(<a href="../entity/ContratoPredio.html" title="class in co.empresa.gestioncontratos.entity">ContratoPredio</a>&nbsp;contratoPredio)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3">&nbsp;</div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code>boolean</code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#existsByContratoPredio_PredioAndCompletadaFalse(co.empresa.gestioncontratos.entity.Predio)" class="member-name-link">existsByContratoPredio_PredioAndCompletadaFalse</a><wbr>(<a href="../entity/Predio.html" title="class in co.empresa.gestioncontratos.entity">Predio</a>&nbsp;predio)</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#existsByContratoPredio_Predio(co.empresa.gestioncontratos.entity.Predio)" class="member-name-link">existsByContratoPredio_Predio</a><wbr>(<a href="../entity/Predio.html" title="class in co.empresa.gestioncontratos.entity">Predio</a>&nbsp;predio)</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3">&nbsp;</div>
+<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/List.html" title="class or interface in java.util" class="external-link">List</a><wbr>&lt;<a href="../entity/Actividad.html" title="class in co.empresa.gestioncontratos.entity">Actividad</a>&gt;</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#findByServicioOrderByNombreAsc(co.empresa.gestioncontratos.entity.Servicio)" class="member-name-link">findByServicioOrderByNombreAsc</a><wbr>(<a href="../entity/Servicio.html" title="class in co.empresa.gestioncontratos.entity">Servicio</a>&nbsp;servicio)</code></div>
+<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3">&nbsp;</div>
 </div>
 </div>
 </div>
@@ -182,12 +185,6 @@ extends org.springframework.data.jpa.repository.JpaRepository&lt;<a href="../ent
 </section>
 </li>
 <li>
-<section class="detail" id="existsByContratoPredio_PredioAndCompletadaFalse(co.empresa.gestioncontratos.entity.Predio)">
-<h3>existsByContratoPredio_PredioAndCompletadaFalse</h3>
-<div class="member-signature"><span class="return-type">boolean</span>&nbsp;<span class="element-name">existsByContratoPredio_PredioAndCompletadaFalse</span><wbr><span class="parameters">(<a href="../entity/Predio.html" title="class in co.empresa.gestioncontratos.entity">Predio</a>&nbsp;predio)</span></div>
-</section>
-</li>
-<li>
 <section class="detail" id="countByContratoPredio(co.empresa.gestioncontratos.entity.ContratoPredio)">
 <h3>countByContratoPredio</h3>
 <div class="member-signature"><span class="return-type">long</span>&nbsp;<span class="element-name">countByContratoPredio</span><wbr><span class="parameters">(<a href="../entity/ContratoPredio.html" title="class in co.empresa.gestioncontratos.entity">ContratoPredio</a>&nbsp;contratoPredio)</span></div>
@@ -216,7 +213,7 @@ extends org.springframework.data.jpa.repository.JpaRepository&lt;<a href="../ent
 <li>
 <section class="detail" id="countActividadesHoyByOperario(java.lang.Long)">
 <h3>countActividadesHoyByOperario</h3>
-<div class="member-signature"><span class="annotations">@Query("SELECT COUNT(a) FROM Actividad a WHERE a.contratoPredio.operario.id = :operarioId AND DATE(a.fechaCreacion) = CURRENT_DATE")
+<div class="member-signature"><span class="annotations">@Query("SELECT COUNT(a) FROM Actividad a WHERE a.operario.id = :operarioId AND a.fechaCreacion = CURRENT_DATE")
 </span><span class="return-type">long</span>&nbsp;<span class="element-name">countActividadesHoyByOperario</span><wbr><span class="parameters">(@Param("operarioId")
  <a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Long.html" title="class or interface in java.lang" class="external-link">Long</a>&nbsp;operarioId)</span></div>
 </section>
@@ -224,7 +221,7 @@ extends org.springframework.data.jpa.repository.JpaRepository&lt;<a href="../ent
 <li>
 <section class="detail" id="countActividadesMesByOperario(java.lang.Long)">
 <h3>countActividadesMesByOperario</h3>
-<div class="member-signature"><span class="annotations">@Query("SELECT COUNT(a) FROM Actividad a WHERE a.contratoPredio.operario.id = :operarioId AND MONTH(a.fechaCreacion) = MONTH(CURRENT_DATE) AND YEAR(a.fechaCreacion) = YEAR(CURRENT_DATE)")
+<div class="member-signature"><span class="annotations">@Query("SELECT COUNT(a) FROM Actividad a WHERE a.operario.id = :operarioId AND MONTH(a.fechaCreacion) = MONTH(CURRENT_DATE) AND YEAR(a.fechaCreacion) = YEAR(CURRENT_DATE)")
 </span><span class="return-type">long</span>&nbsp;<span class="element-name">countActividadesMesByOperario</span><wbr><span class="parameters">(@Param("operarioId")
  <a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Long.html" title="class or interface in java.lang" class="external-link">Long</a>&nbsp;operarioId)</span></div>
 </section>
@@ -232,9 +229,21 @@ extends org.springframework.data.jpa.repository.JpaRepository&lt;<a href="../ent
 <li>
 <section class="detail" id="countByOperarioId(java.lang.Long)">
 <h3>countByOperarioId</h3>
-<div class="member-signature"><span class="annotations">@Query("SELECT COUNT(a) FROM Actividad a WHERE a.contratoPredio.operario.id = :operarioId")
+<div class="member-signature"><span class="annotations">@Query("SELECT COUNT(a) FROM Actividad a WHERE a.operario.id = :operarioId")
 </span><span class="return-type">long</span>&nbsp;<span class="element-name">countByOperarioId</span><wbr><span class="parameters">(@Param("operarioId")
  <a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Long.html" title="class or interface in java.lang" class="external-link">Long</a>&nbsp;operarioId)</span></div>
+</section>
+</li>
+<li>
+<section class="detail" id="findByServicioOrderByNombreAsc(co.empresa.gestioncontratos.entity.Servicio)">
+<h3>findByServicioOrderByNombreAsc</h3>
+<div class="member-signature"><span class="return-type"><a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/List.html" title="class or interface in java.util" class="external-link">List</a>&lt;<a href="../entity/Actividad.html" title="class in co.empresa.gestioncontratos.entity">Actividad</a>&gt;</span>&nbsp;<span class="element-name">findByServicioOrderByNombreAsc</span><wbr><span class="parameters">(<a href="../entity/Servicio.html" title="class in co.empresa.gestioncontratos.entity">Servicio</a>&nbsp;servicio)</span></div>
+</section>
+</li>
+<li>
+<section class="detail" id="countByServicio(co.empresa.gestioncontratos.entity.Servicio)">
+<h3>countByServicio</h3>
+<div class="member-signature"><span class="return-type">long</span>&nbsp;<span class="element-name">countByServicio</span><wbr><span class="parameters">(<a href="../entity/Servicio.html" title="class in co.empresa.gestioncontratos.entity">Servicio</a>&nbsp;servicio)</span></div>
 </section>
 </li>
 </ul>

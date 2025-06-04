@@ -18,6 +18,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import jakarta.validation.Valid;
@@ -103,11 +104,13 @@ public class UsuarioController {
     @PostMapping("/nuevo")
     public String crear(@Valid @ModelAttribute UsuarioDTO usuarioDTO,
                        BindingResult result,
+                       @RequestParam(value = "foto", required = false) MultipartFile fotoFile,
                        RedirectAttributes redirectAttributes,
                        Model model) {
         
         log.info("=== RECIBIENDO PETICIÓN CREAR USUARIO ===");
         log.info("UsuarioDTO recibido: {}", usuarioDTO);
+        log.info("Archivo de foto recibido: {}", fotoFile != null ? fotoFile.getOriginalFilename() : "ninguno");
         log.info("Errores de validación: {}", result.getAllErrors());
         
         try {
@@ -131,7 +134,7 @@ public class UsuarioController {
             }
             
             log.info("Validaciones pasadas, creando usuario...");
-            Usuario usuario = usuarioService.crear(usuarioDTO);
+            Usuario usuario = usuarioService.crear(usuarioDTO, fotoFile);
             
             log.info("✅ Usuario creado exitosamente: {}", usuario.getUsername());
             redirectAttributes.addFlashAttribute("success", 
@@ -162,9 +165,9 @@ public class UsuarioController {
     }
 
     @GetMapping("/{uuid}/editar")
-    public String mostrarFormularioEditar(@PathVariable UUID uuid, Model model) {
+    public String mostrarFormularioEditar(@PathVariable UUID uuid
+                                          , Model model) {
         log.info("=== EDITANDO USUARIO: {} ===", uuid);
-        
         try {
             Usuario usuario = usuarioService.buscarPorUuid(uuid);
             UsuarioDTO usuarioDTO = usuarioService.convertirADTO(usuario);
@@ -184,11 +187,12 @@ public class UsuarioController {
     public String actualizar(@PathVariable UUID uuid,
                            @Valid @ModelAttribute UsuarioDTO usuarioDTO,
                            BindingResult result,
+                           @RequestParam(value = "foto", required = false) MultipartFile fotoFile,
                            RedirectAttributes redirectAttributes,
                            Model model) {
         
         log.info("=== ACTUALIZANDO USUARIO: {} ===", uuid);
-        
+        log.info("Archivo de foto recibido: {}", fotoFile != null ? fotoFile.getOriginalFilename() : "ninguno");    
         try {
             if (result.hasErrors()) {
                 model.addAttribute("perfiles", PerfilUsuario.values());
@@ -196,7 +200,7 @@ public class UsuarioController {
                 //return "admin/usuario-form";
             }
             
-            Usuario usuario = usuarioService.actualizar(uuid, usuarioDTO);
+            Usuario usuario = usuarioService.actualizar(uuid, usuarioDTO, fotoFile);
             redirectAttributes.addFlashAttribute("success", 
                 "Usuario '" + usuario.getUsername() + "' actualizado exitosamente");
             
@@ -368,7 +372,7 @@ public class UsuarioController {
             return ResponseEntity.badRequest().body(response);
         }
     }
-        @GetMapping("/api/supervisores")
+    @GetMapping("/api/supervisores")
     @ResponseBody
     public ResponseEntity<List<UsuarioDTO>> listarSupervisores() {
         log.info("=== API: LISTANDO SUPERVISORES ===");

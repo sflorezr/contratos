@@ -24,10 +24,7 @@ public class ContratoDTO {
     @NotBlank(message = "El objetivo es requerido")
     @Size(max = 500, message = "El objetivo no puede exceder 500 caracteres")
     private String objetivo;
-    
-    @NotNull(message = "El sector es requerido")
-    private UUID sectorUuid;
-    
+        
     @NotNull(message = "La fecha de inicio es requerida")
     private LocalDate fechaInicio;
     
@@ -36,8 +33,11 @@ public class ContratoDTO {
     
     @NotNull(message = "El plan de tarifa es requerido")
     private UUID planTarifaUuid;
+
+    @NotNull(message = "La zona es requerida")
+    private UUID zonaId;
     
-    private UUID supervisorUuid;
+    private UUID supervisorId;
     
     @Builder.Default
     private List<UUID> coordinadorUuids = new ArrayList<>();
@@ -48,14 +48,21 @@ public class ContratoDTO {
     private EstadoContrato estado;
     
     // Campos adicionales para vistas (no se persisten, solo para mostrar)
-    private String sectorNombre;
     private String planTarifaNombre;
     private String supervisorNombre;
     private Integer totalPredios;
     private Integer prediosAsignados;
     private Integer totalOperarios;
     private Double porcentajeAvance;
+    private Integer cantidadCoordinadores;
     
+    // NUEVOS CAMPOS para zonas
+    private String zonaNombre;
+    private Integer totalZonas;    
+    private Integer totalSectores;
+    private Integer sectoresActivos;
+    
+
     // Lista de coordinadores para mostrar
     @Builder.Default
     private List<UsuarioResumenDTO> coordinadores = new ArrayList<>();

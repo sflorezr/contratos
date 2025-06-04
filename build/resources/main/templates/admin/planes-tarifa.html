@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Planes de Tarifa</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    
+    <!-- Estilos propios -->
+    <link rel="stylesheet" href="/css/contratos.css">
+</head>
+<body>
+    <!-- Sidebar -->
+    <nav class="sidebar-menu">
+        <div class="sidebar-header">
+            <i class="fas fa-tags fa-2x mb-2"></i>
+            <h5 class="mb-0">Planes de Tarifa</h5>
+            <small>Panel Admin</small>
+        </div>
+        
+        <div class="mt-3">
+            <a href="/admin/dashboard" class="nav-link">
+                <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+            </a>
+            <a href="/admin/usuarios" class="nav-link">
+                <i class="fas fa-users me-2"></i>Usuarios
+            </a>
+            <a href="/admin/contratos" class="nav-link">
+                <i class="fas fa-file-contract me-2"></i>Contratos
+            </a>
+            <a href="/admin/predios" class="nav-link">
+                <i class="fas fa-map-marker-alt me-2"></i>Predios
+            </a>
+            <a href="/admin/sectores" class="nav-link">
+                <i class="fas fa-map me-2"></i>Sectores
+            </a>
+            <a href="/admin/servicios" class="nav-link">
+                <i class="fas fa-cogs me-2"></i>Servicios
+            </a>
+            <a href="/admin/planes-tarifa" class="nav-link active">
+                <i class="fas fa-tags me-2"></i>Planes de Tarifa
+            </a>
+            <a href="/admin/actividades" class="nav-link">
+                <i class="fas fa-tasks me-2"></i>Actividades
+            </a>
+            <a href="/logout" class="nav-link mt-4">
+                <i class="fas fa-sign-out-alt me-2"></i>Salir
+            </a>
+        </div>
+    </nav>
+    
+    <!-- Main Content -->
+    <div class="main-area">
+        <!-- Header -->
+        <div class="header-bar">
+            <div>
+                <h4 class="mb-0">Gestión de Planes de Tarifa</h4>
+                <small class="text-muted">Administrar planes de tarifa y tarifas</small>
+            </div>
+            <div class="d-flex align-items-center">
+                <button class="btn btn-gradient btn-sm me-3" id="btnNewPlan">
+                    <i class="fas fa-plus me-2"></i>Nuevo Plan de Tarifa
+                </button>
+                <div class="avatar-circle me-2">AS</div>
+                <div>
+                    <div class="fw-bold" id="currentUserName">Administrador</div>
+                    <small class="text-muted" id="currentUserRole">Admin</small>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Content -->
+        <div class="content-wrapper">
+            <!-- Alerts -->
+            <div id="alertsContainer"></div>
+            
+            <!-- Estadísticas -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="stats-card">
+                        <div class="stats-icon" style="background-color: rgba(102, 126, 234, 0.1); color: var(--primary);">
+                            <i class="fas fa-tags"></i>
+                        </div>
+                        <h3 class="mb-1" id="totalPlanes">0</h3>
+                        <p class="text-muted mb-0">Total Planes</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stats-card">
+                        <div class="stats-icon" style="background-color: rgba(72, 187, 120, 0.1); color: var(--success);">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <h3 class="mb-1" id="planesActivos">0</h3>
+                        <p class="text-muted mb-0">Activos</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stats-card">
+                        <div class="stats-icon" style="background-color: rgba(246, 173, 85, 0.1); color: var(--warning);">
+                            <i class="fas fa-pause-circle"></i>
+                        </div>
+                        <h3 class="mb-1" id="planesInactivos">0</h3>
+                        <p class="text-muted mb-0">Inactivos</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stats-card">
+                        <div class="stats-icon" style="background-color: rgba(66, 153, 225, 0.1); color: var(--info);">
+                            <i class="fas fa-money-bill-wave"></i>
+                        </div>
+                        <h3 class="mb-1" id="totalTarifas">0</h3>
+                        <p class="text-muted mb-0">Total Tarifas</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Filtros -->
+            <div class="filter-section">
+                <h6 class="mb-3"><i class="fas fa-filter me-2"></i>Filtros</h6>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <input type="text" class="form-control" id="filtroNombre" placeholder="Buscar por nombre...">
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" id="filtroEstado">
+                            <option value="">Todos los estados</option>
+                            <option value="true">Activo</option>
+                            <option value="false">Inactivo</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" id="filtroTarifas">
+                            <option value="">Todos</option>
+                            <option value="con-tarifas">Con tarifas</option>
+                            <option value="sin-tarifas">Sin tarifas</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-outline-primary w-100" id="btnAplicarFiltros">
+                            <i class="fas fa-search me-2"></i>Buscar
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Lista de Planes de Tarifa -->
+            <div id="planesTarifaContainer">
+                <!-- Los planes se cargan dinámicamente aquí -->
+            </div>
+            
+            <!-- Loading -->
+            <div id="loadingIndicator" class="text-center py-4 d-none">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                </div>
+            </div>
+            
+            <!-- Empty State -->
+            <div id="emptyState" class="empty-state d-none">
+                <i class="fas fa-tags"></i>
+                <h5>No se encontraron planes de tarifa</h5>
+                <p>Crea un nuevo plan de tarifa para comenzar</p>
+                <button class="btn btn-gradient" id="btnNewPlan2">
+                    <i class="fas fa-plus me-2"></i>Crear Plan de Tarifa
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal Nuevo/Editar Plan de Tarifa -->
+    <div class="modal fade" id="modalPlanTarifa" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-tags me-2"></i>
+                        <span id="modalPlanTarifaTitle">Nuevo Plan de Tarifa</span>
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="planTarifaForm">
+                        <input type="hidden" id="planTarifaUuid" name="uuid">
+                        <input type="hidden" id="isEdit" value="false">
+                        
+                        <!-- Información básica -->
+                        <div class="form-section">
+                            <h6 class="mb-3"><i class="fas fa-info-circle me-2"></i>Información Básica</h6>
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <label class="form-label">Nombre <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="nombre" name="nombre" required 
+                                           maxlength="100" placeholder="Ej: Plan Básico Residencial">
+                                    <div class="form-text">Máximo 100 caracteres</div>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label">Descripción</label>
+                                    <textarea class="form-control" id="descripcion" name="descripcion" rows="4" 
+                                              maxlength="1000" placeholder="Descripción detallada del plan de tarifa..."></textarea>
+                                    <div class="form-text">Máximo 1000 caracteres. Opcional.</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Estado</label>
+                                    <select class="form-select" id="activo" name="activo">
+                                        <option value="true">Activo</option>
+                                        <option value="false">Inactivo</option>
+                                    </select>
+                                    <div class="form-text">Un plan inactivo no puede ser usado en nuevos contratos</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Tarifas (solo en edición) -->
+                        <div class="form-section d-none" id="tarifasSection">
+                            <h6 class="mb-3"><i class="fas fa-money-bill-wave me-2"></i>Tarifas Asociadas</h6>
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div class="predios-list" id="tarifasAsociadas">
+                                        <!-- Se cargan dinámicamente -->
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <button type="button" class="btn btn-outline-primary w-100 mb-2" id="btnAgregarTarifas">
+                                        <i class="fas fa-plus me-2"></i>Gestionar Tarifas
+                                    </button>
+                                    <div class="text-muted small">
+                                        <p class="mb-1">Total tarifas: <strong id="totalTarifasCount">0</strong></p>
+                                        <p class="mb-1">Activas: <strong id="tarifasActivasCount">0</strong></p>
+                                        <p class="mb-0">Inactivas: <strong id="tarifasInactivasCount">0</strong></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Contratos asociados (solo en edición) -->
+                        <div class="form-section d-none" id="contratosSection">
+                            <h6 class="mb-3"><i class="fas fa-file-contract me-2"></i>Contratos que usan este Plan</h6>
+                            <div id="contratosAsociados">
+                                <!-- Se cargan dinámicamente -->
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-gradient" id="savePlanTarifaBtn">
+                        <i class="fas fa-save me-2"></i>Guardar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/planes-tarifa.js"></script>
+</body>
+</html>

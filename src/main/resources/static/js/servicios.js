@@ -23,7 +23,14 @@ async function cargarEstadisticas() {
         mostrarAlerta('Error al cargar estadísticas', 'danger');
     }
 }
-
+function aplicarFiltros() {
+    const busqueda = document.getElementById('filtroBusqueda').value;
+    const estado = document.getElementById('filtroEstado').value;
+    const tipo = document.getElementById('filtroTipo').value;
+    
+    // Implementar lógica de filtrado aquí
+    cargarServicios(); // Por ahora recarga todos
+}
 async function cargarServicios() {
     mostrarLoading(true);
     try {
@@ -191,11 +198,3 @@ async function cambiarEstado(uuid, nuevoEstado) {
 }
 
 // Funciones de filtrado
-function aplicarFiltros() {
-    const busqueda = document.getElementById('filtroBusqueda').value;
-    const estado = document.getElementById('filtroEstado').value;
-    const tipo = document.getElementById('filtroTipo').value;
-    
-    // Implementar lógica de filtrado aquí
-    cargarServicios(); // Por ahora recarga todos
-}
