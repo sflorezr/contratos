@@ -10,13 +10,26 @@ import co.empresa.gestioncontratos.repository.ServicioRepository;
 import co.empresa.gestioncontratos.repository.TarifaRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.apache.commons.io.output.ByteArrayOutputStream;
+import org.apache.poi.hssf.usermodel.HSSFCell;
+import org.apache.poi.hssf.usermodel.HSSFCellStyle;
+import org.apache.poi.hssf.usermodel.HSSFFont;
+import org.apache.poi.hssf.usermodel.HSSFRow;
+import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.Cell;
+
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import jakarta.persistence.criteria.Predicate;
+import org.springframework.web.multipart.MultipartFile;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -127,7 +140,7 @@ public class TarifaService {
             tarifaDTO.getPrecioRural().compareTo(BigDecimal.ZERO) <= 0) {
             throw new RuntimeException("Los precios deben ser mayores a cero");
         }
-        
+
         // Si cambia el plan o servicio, validar que no exista duplicado
         if (!tarifa.getPlanTarifa().getUuid().equals(tarifaDTO.getPlanTarifaUuid()) ||
             !tarifa.getServicio().getUuid().equals(tarifaDTO.getServicioUuid())) {
@@ -218,15 +231,15 @@ public class TarifaService {
         resumen.put("tarifasActivas", tarifas.stream().filter(Tarifa::getActivo).count());
         
         if (!tarifas.isEmpty()) {
-            BigDecimal promedioUrbano = tarifas.stream()
-                .map(Tarifa::getPrecioUrbano)
-                .reduce(BigDecimal.ZERO, BigDecimal::add)
-                .divide(BigDecimal.valueOf(tarifas.size()), 2, BigDecimal.ROUND_HALF_UP);
-                
-            BigDecimal promedioRural = tarifas.stream()
-                .map(Tarifa::getPrecioRural)
-                .reduce(BigDecimal.ZERO, BigDecimal::add)
-                .divide(BigDecimal.valueOf(tarifas.size()), 2, BigDecimal.ROUND_HALF_UP);
+            double promedioUrbano = tarifas.stream()
+                .mapToDouble(t -> t.getPrecioUrbano().doubleValue())
+                .average()
+                .orElse(0.0);
+
+            double promedioRural = tarifas.stream()
+                .mapToDouble(t -> t.getPrecioRural().doubleValue())
+                .average()
+                .orElse(0.0);
                 
             resumen.put("precioPromedioUrbano", promedioUrbano);
             resumen.put("precioPromedioRural", promedioRural);
@@ -276,8 +289,8 @@ public class TarifaService {
         BigDecimal factor = BigDecimal.ONE.add(porcentajeAumento.divide(new BigDecimal("100")));
         
         for (Tarifa tarifa : tarifas) {
-            tarifa.setPrecioUrbano(tarifa.getPrecioUrbano().multiply(factor).setScale(2, BigDecimal.ROUND_HALF_UP));
-            tarifa.setPrecioRural(tarifa.getPrecioRural().multiply(factor).setScale(2, BigDecimal.ROUND_HALF_UP));
+            tarifa.setPrecioUrbano(tarifa.getPrecioUrbano());
+            tarifa.setPrecioRural(tarifa.getPrecioRural());
             tarifaRepository.save(tarifa);
         }
         
@@ -391,4 +404,195 @@ public class TarifaService {
         dto.setServicioNombre(tarifa.getServicio().getNombre());
         return dto;
     }
+
+    public Map<String, Object> cargarTarifasDesdeExcel(MultipartFile archivo, UUID planTarifaUuid) {
+        log.info("Procesando archivo Excel de tarifas para plan: {}", planTarifaUuid);
+        
+        Map<String, Object> resultado = new HashMap<>();
+        List<String> errores = new ArrayList<>();
+        List<TarifaDTO> tarifasCreadas = new ArrayList<>();
+        int filasProcesadas = 0;
+        int tarifasExitosas = 0;
+        
+        try {
+            PlanTarifa planTarifa = planTarifaRepository.findByUuid(planTarifaUuid)
+                .orElseThrow(() -> new RuntimeException("Plan de tarifa no encontrado"));
+            
+            Workbook workbook = WorkbookFactory.create(archivo.getInputStream());
+            Sheet sheet = workbook.getSheetAt(0);
+            
+            // Validar encabezados (fila 0)
+            Row headerRow = sheet.getRow(0);
+            if (headerRow == null || !validarEncabezados(headerRow)) {
+                throw new RuntimeException("El archivo no tiene el formato correcto. Descargue la plantilla.");
+            }
+            
+            // Procesar filas de datos (desde fila 1)
+            for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+                Row row = sheet.getRow(i);
+                if (row == null || estaFilaVacia(row)) continue;
+                
+                filasProcesadas++;
+                
+                try {
+                    TarifaDTO tarifaDTO = procesarFilaExcel(row, planTarifaUuid);
+                    Tarifa tarifa = crear(tarifaDTO);
+                    tarifasCreadas.add(convertirADTO(tarifa));
+                    tarifasExitosas++;
+                    
+                } catch (Exception e) {
+                    errores.add("Fila " + (i + 1) + ": " + e.getMessage());
+                }
+            }
+            
+            workbook.close();
+            
+            resultado.put("filasProcesadas", filasProcesadas);
+            resultado.put("tarifasCreadas", tarifasExitosas);
+            resultado.put("errores", errores);
+            resultado.put("tarifas", tarifasCreadas);
+            
+            log.info("Procesamiento completado: {} tarifas creadas de {} filas procesadas", 
+                    tarifasExitosas, filasProcesadas);
+            
+            return resultado;
+            
+        } catch (Exception e) {
+            log.error("Error procesando archivo Excel: ", e);
+            throw new RuntimeException("Error al procesar archivo: " + e.getMessage());
+        }
+    }
+
+    private boolean validarEncabezados(Row headerRow) {
+        String[] encabezadosEsperados = {"CODIGO_SERVICIO", "PRECIO_URBANO", "PRECIO_RURAL"};
+        
+        for (int i = 0; i < encabezadosEsperados.length; i++) {
+            Cell cell = headerRow.getCell(i);
+            if (cell == null || !encabezadosEsperados[i].equals(cell.getStringCellValue().trim().toUpperCase())) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean estaFilaVacia(Row row) {
+        for (int i = 0; i < 3; i++) {
+            Cell cell = row.getCell(i);
+            if (cell != null && !cell.getStringCellValue().trim().isEmpty()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private TarifaDTO procesarFilaExcel(Row row, UUID planTarifaUuid) {
+        try {
+            String codigoServicio = getCellValueAsString(row.getCell(0));
+            BigDecimal precioUrbano = getCellValueAsBigDecimal(row.getCell(1));
+            BigDecimal precioRural = getCellValueAsBigDecimal(row.getCell(2));
+            
+            if (codigoServicio == null || codigoServicio.trim().isEmpty()) {
+                throw new RuntimeException("Código de servicio es requerido");
+            }
+            
+            if (precioUrbano == null || precioUrbano.compareTo(BigDecimal.ZERO) <= 0) {
+                throw new RuntimeException("Precio urbano debe ser mayor a 0");
+            }
+            
+            if (precioRural == null || precioRural.compareTo(BigDecimal.ZERO) <= 0) {
+                throw new RuntimeException("Precio rural debe ser mayor a 0");
+            }
+            
+            return TarifaDTO.builder()                
+                .precioUrbano(precioUrbano)
+                .precioRural(precioRural)
+                .planTarifaUuid(planTarifaUuid)
+                .activo(true)
+                .build();
+                
+        } catch (Exception e) {
+            throw new RuntimeException("Error en formato de datos: " + e.getMessage());
+        }
+    }
+
+    private String getCellValueAsString(Cell cell) {
+        if (cell == null) return null;
+        
+        switch (cell.getCellType()) {
+            case STRING:
+                return cell.getStringCellValue();
+            case NUMERIC:
+                return String.valueOf((long) cell.getNumericCellValue());
+            default:
+                return null;
+        }
+    }
+
+    private BigDecimal getCellValueAsBigDecimal(Cell cell) {
+        if (cell == null) return null;
+        
+        switch (cell.getCellType()) {
+            case NUMERIC:
+                return BigDecimal.valueOf(cell.getNumericCellValue());
+            case STRING:
+                try {
+                    return new BigDecimal(cell.getStringCellValue());
+                } catch (NumberFormatException e) {
+                    throw new RuntimeException("Valor numérico inválido: " + cell.getStringCellValue());
+                }
+            default:
+                return null;
+        }
+    }
+    public byte[] generarPlantillaExcel() {
+        try {
+            // Usar HSSFWorkbook (formato .xls) en lugar de XSSFWorkbook
+            HSSFWorkbook workbook = new HSSFWorkbook();
+            HSSFSheet sheet = workbook.createSheet("Tarifas");
+            
+            // Crear encabezados
+            HSSFRow headerRow = sheet.createRow(0);
+            String[] headers = {"CODIGO_SERVICIO", "PRECIO_URBANO", "PRECIO_RURAL"};
+            
+            for (int i = 0; i < headers.length; i++) {
+                HSSFCell cell = headerRow.createCell(i);
+                cell.setCellValue(headers[i]);
+                
+                // Estilo para encabezados
+                HSSFCellStyle headerStyle = workbook.createCellStyle();
+                HSSFFont font = workbook.createFont();
+                font.setBold(true);
+                headerStyle.setFont(font);
+                cell.setCellStyle(headerStyle);
+            }
+            
+            // Crear filas de ejemplo
+            HSSFRow row1 = sheet.createRow(1);
+            row1.createCell(0).setCellValue("SERV001");
+            row1.createCell(1).setCellValue(50000.0);
+            row1.createCell(2).setCellValue(45000.0);
+            
+            HSSFRow row2 = sheet.createRow(2);
+            row2.createCell(0).setCellValue("SERV002");
+            row2.createCell(1).setCellValue(75000.0);
+            row2.createCell(2).setCellValue(70000.0);
+            
+            // Ajustar ancho de columnas
+            for (int i = 0; i < headers.length; i++) {
+                sheet.autoSizeColumn(i);
+            }
+            
+            // Convertir a bytes
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            workbook.write(outputStream);
+            byte[] result = outputStream.toByteArray();
+            workbook.close();
+            
+            return result;
+            
+        } catch (Exception e) {
+            log.error("Error generando plantilla Excel: ", e);
+            throw new RuntimeException("Error al generar plantilla: " + e.getMessage());
+        }
+    }    
 }

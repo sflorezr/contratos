@@ -58,9 +58,11 @@ dependencies {
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
     
     // Commons utilities
-    implementation 'org.apache.commons:commons-lang3'
-    implementation 'commons-io:commons-io:2.11.0'
-    
+
+    implementation 'org.apache.poi:poi:5.2.4'
+    implementation 'org.apache.poi:poi-ooxml:5.2.4'
+    implementation 'commons-io:commons-io:2.13.0'
+
     // Web utilities
     implementation 'org.webjars:bootstrap:5.3.0'
     implementation 'org.webjars:font-awesome:6.4.0'

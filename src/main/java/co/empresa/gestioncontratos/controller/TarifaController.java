@@ -16,6 +16,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -312,4 +313,51 @@ public class TarifaController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+    @PostMapping("/cargar-excel")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> cargarExcel(
+            @RequestParam("archivo") MultipartFile archivo,
+            @RequestParam("planTarifaUuid") UUID planTarifaUuid) {
+        
+        Map<String, Object> response = new java.util.HashMap<>();
+        
+        try {
+            if (archivo.isEmpty()) {
+                response.put("success", false);
+                response.put("message", "Debe seleccionar un archivo");
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+            Map<String, Object> resultado = tarifaService.cargarTarifasDesdeExcel(archivo, planTarifaUuid);
+            
+            response.put("success", true);
+            response.put("message", "Archivo procesado exitosamente");
+            response.putAll(resultado);
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            log.error("Error al procesar archivo Excel: ", e);
+            response.put("success", false);
+            response.put("message", "Error al procesar archivo: " + e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+    @GetMapping("/plantilla-excel")
+    public ResponseEntity<byte[]> descargarPlantilla() {
+        try {
+            byte[] plantilla = tarifaService.generarPlantillaExcel();
+            
+            return ResponseEntity.ok()
+                .header("Content-Type", "application/vnd.ms-excel")
+                .header("Content-Disposition", "attachment; filename=plantilla_tarifas.xls")
+                .body(plantilla);
+                
+        } catch (Exception e) {
+            log.error("Error al generar plantilla: ", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+
 }

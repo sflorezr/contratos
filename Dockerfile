@@ -7,6 +7,6 @@ RUN gradle build -x test
 # Etapa 2: Imagen ligera para ejecutar la app
 FROM eclipse-temurin:17-jdk-alpine
 VOLUME /tmp
-COPY --from=build /app/build/libs/app-1.0.0-boot.jar app.jar
+COPY --from=build /app/build/libs/app.jar app.jar
 EXPOSE 8080
 ENTRYPOINT ["java","-jar","/app.jar"]

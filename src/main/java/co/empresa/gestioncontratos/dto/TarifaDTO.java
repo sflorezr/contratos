@@ -77,7 +77,6 @@ public class TarifaDTO {
         return precioUrbano != null && precioUrbano.compareTo(BigDecimal.ZERO) > 0 &&
                precioRural != null && precioRural.compareTo(BigDecimal.ZERO) > 0;
     }
-
     public boolean tieneReferencesCompletas() {
         return planTarifaUuid != null && servicioUuid != null;
     }

@@ -34,7 +34,7 @@ public interface TarifaRepository extends JpaRepository<Tarifa, Long> {
     );
     Page<Tarifa> findAll(Specification<Tarifa> spec, Pageable pageable);
     // Métodos para estadísticas
-    long countByActivo(Boolean activo);
+    int countByActivo(Boolean activo);
     
     @Query("SELECT pt.nombre, COUNT(t) FROM Tarifa t JOIN t.planTarifa pt GROUP BY pt.nombre ORDER BY COUNT(t) DESC")
     List<Object[]> contarTarifasPorPlan();
@@ -65,5 +65,5 @@ public interface TarifaRepository extends JpaRepository<Tarifa, Long> {
     List<Tarifa> findByServicioUuidAndActivoTrue(@Param("servicioUuid") UUID servicioUuid);
     
     @Query("SELECT COUNT(t) FROM Tarifa t WHERE t.planTarifa.uuid = :planTarifaUuid")
-    long countByPlanTarifaUuid(@Param("planTarifaUuid") UUID planTarifaUuid);
+    int countByPlanTarifaUuid(@Param("planTarifaUuid") UUID planTarifaUuid);
 }

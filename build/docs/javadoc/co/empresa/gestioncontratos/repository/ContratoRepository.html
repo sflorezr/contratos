@@ -110,12 +110,12 @@ extends org.springframework.data.jpa.repository.JpaRepository&lt;<a href="../ent
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code>long</code></div>
 <div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#countByEstado(co.empresa.gestioncontratos.enums.EstadoContrato)" class="member-name-link">countByEstado</a><wbr>(<a href="../enums/EstadoContrato.html" title="enum class in co.empresa.gestioncontratos.enums">EstadoContrato</a>&nbsp;estado)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3">&nbsp;</div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code>long</code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#countBySector(co.empresa.gestioncontratos.entity.Sector)" class="member-name-link">countBySector</a><wbr>(<a href="../entity/Sector.html" title="class in co.empresa.gestioncontratos.entity">Sector</a>&nbsp;sector)</code></div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code>int</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#countByPlanTarifa(co.empresa.gestioncontratos.entity.PlanTarifa)" class="member-name-link">countByPlanTarifa</a><wbr>(<a href="../entity/PlanTarifa.html" title="class in co.empresa.gestioncontratos.entity">PlanTarifa</a>&nbsp;plantarifa)</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3">&nbsp;</div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code>long</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#countBySectorAndEstado(co.empresa.gestioncontratos.entity.Sector,co.empresa.gestioncontratos.enums.EstadoContrato)" class="member-name-link">countBySectorAndEstado</a><wbr>(<a href="../entity/Sector.html" title="class in co.empresa.gestioncontratos.entity">Sector</a>&nbsp;sector,
- <a href="../enums/EstadoContrato.html" title="enum class in co.empresa.gestioncontratos.enums">EstadoContrato</a>&nbsp;estado)</code></div>
+<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code>int</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#countByPlanTarifaAndEstado(co.empresa.gestioncontratos.entity.PlanTarifa,co.empresa.gestioncontratos.enums.EstadoContrato)" class="member-name-link">countByPlanTarifaAndEstado</a><wbr>(<a href="../entity/PlanTarifa.html" title="class in co.empresa.gestioncontratos.entity">PlanTarifa</a>&nbsp;plantarifa,
+ <a href="../enums/EstadoContrato.html" title="enum class in co.empresa.gestioncontratos.enums">EstadoContrato</a>&nbsp;estadoContrato)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3">&nbsp;</div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code>long</code></div>
 <div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#countBySupervisorId(java.lang.Long)" class="member-name-link">countBySupervisorId</a><wbr>(<a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Long.html" title="class or interface in java.lang" class="external-link">Long</a>&nbsp;supervisorId)</code></div>
@@ -124,32 +124,38 @@ extends org.springframework.data.jpa.repository.JpaRepository&lt;<a href="../ent
 <div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#countBySupervisorIdAndEstado(java.lang.Long,co.empresa.gestioncontratos.enums.EstadoContrato)" class="member-name-link">countBySupervisorIdAndEstado</a><wbr>(<a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Long.html" title="class or interface in java.lang" class="external-link">Long</a>&nbsp;supervisorId,
  <a href="../enums/EstadoContrato.html" title="enum class in co.empresa.gestioncontratos.enums">EstadoContrato</a>&nbsp;estado)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3">&nbsp;</div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/Map.html" title="class or interface in java.util" class="external-link">Map</a><wbr>&lt;<a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Long.html" title="class or interface in java.lang" class="external-link">Long</a>,<wbr><a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Long.html" title="class or interface in java.lang" class="external-link">Long</a>&gt;</code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#countContratosActivosPorSector()" class="member-name-link">countContratosActivosPorSector</a>()</code></div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code>long</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#countByZona(co.empresa.gestioncontratos.entity.Zona)" class="member-name-link">countByZona</a><wbr>(<a href="../entity/Zona.html" title="class in co.empresa.gestioncontratos.entity">Zona</a>&nbsp;zona)</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3">&nbsp;</div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code>boolean</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#existsByNumeroContrato(java.lang.String)" class="member-name-link">existsByNumeroContrato</a><wbr>(<a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;numeroContrato)</code></div>
+<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/Map.html" title="class or interface in java.util" class="external-link">Map</a><wbr>&lt;<a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Long.html" title="class or interface in java.lang" class="external-link">Long</a>,<wbr><a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Long.html" title="class or interface in java.lang" class="external-link">Long</a>&gt;</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#countContratosActivosPorZona()" class="member-name-link">countContratosActivosPorZona</a>()</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3">&nbsp;</div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code>boolean</code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#existsBySector(co.empresa.gestioncontratos.entity.Sector)" class="member-name-link">existsBySector</a><wbr>(<a href="../entity/Sector.html" title="class in co.empresa.gestioncontratos.entity">Sector</a>&nbsp;sector)</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#existsByNumeroContrato(java.lang.String)" class="member-name-link">existsByNumeroContrato</a><wbr>(<a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;numeroContrato)</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3">&nbsp;</div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/List.html" title="class or interface in java.util" class="external-link">List</a><wbr>&lt;<a href="../entity/Contrato.html" title="class in co.empresa.gestioncontratos.entity">Contrato</a>&gt;</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#findAllByOrderByFechaInicioDesc()" class="member-name-link">findAllByOrderByFechaInicioDesc</a>()</code></div>
+<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code>boolean</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#existsByZona(co.empresa.gestioncontratos.entity.Zona)" class="member-name-link">existsByZona</a><wbr>(<a href="../entity/Zona.html" title="class in co.empresa.gestioncontratos.entity">Zona</a>&nbsp;zona)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3">&nbsp;</div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/List.html" title="class or interface in java.util" class="external-link">List</a><wbr>&lt;<a href="../entity/Contrato.html" title="class in co.empresa.gestioncontratos.entity">Contrato</a>&gt;</code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#findByCoordinadoresContainingOrderByFechaInicioDesc(co.empresa.gestioncontratos.entity.Usuario)" class="member-name-link">findByCoordinadoresContainingOrderByFechaInicioDesc</a><wbr>(<a href="../entity/Usuario.html" title="class in co.empresa.gestioncontratos.entity">Usuario</a>&nbsp;coordinador)</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#findAllByOrderByFechaInicioDesc()" class="member-name-link">findAllByOrderByFechaInicioDesc</a>()</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3">&nbsp;</div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/List.html" title="class or interface in java.util" class="external-link">List</a><wbr>&lt;<a href="../entity/Contrato.html" title="class in co.empresa.gestioncontratos.entity">Contrato</a>&gt;</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#findByEstadoOrderByFechaInicioDesc(co.empresa.gestioncontratos.enums.EstadoContrato)" class="member-name-link">findByEstadoOrderByFechaInicioDesc</a><wbr>(<a href="../enums/EstadoContrato.html" title="enum class in co.empresa.gestioncontratos.enums">EstadoContrato</a>&nbsp;estado)</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#findByCoordinadoresContainingOrderByFechaInicioDesc(co.empresa.gestioncontratos.entity.Usuario)" class="member-name-link">findByCoordinadoresContainingOrderByFechaInicioDesc</a><wbr>(<a href="../entity/Usuario.html" title="class in co.empresa.gestioncontratos.entity">Usuario</a>&nbsp;coordinador)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3">&nbsp;</div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/Optional.html" title="class or interface in java.util" class="external-link">Optional</a><wbr>&lt;<a href="../entity/Contrato.html" title="class in co.empresa.gestioncontratos.entity">Contrato</a>&gt;</code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#findByNumeroContrato(java.lang.String)" class="member-name-link">findByNumeroContrato</a><wbr>(<a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;numeroContrato)</code></div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/List.html" title="class or interface in java.util" class="external-link">List</a><wbr>&lt;<a href="../entity/Contrato.html" title="class in co.empresa.gestioncontratos.entity">Contrato</a>&gt;</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#findByEstadoOrderByFechaInicioDesc(co.empresa.gestioncontratos.enums.EstadoContrato)" class="member-name-link">findByEstadoOrderByFechaInicioDesc</a><wbr>(<a href="../enums/EstadoContrato.html" title="enum class in co.empresa.gestioncontratos.enums">EstadoContrato</a>&nbsp;estado)</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3">&nbsp;</div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/List.html" title="class or interface in java.util" class="external-link">List</a><wbr>&lt;<a href="../entity/Contrato.html" title="class in co.empresa.gestioncontratos.entity">Contrato</a>&gt;</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#findBySupervisorOrderByFechaInicioDesc(co.empresa.gestioncontratos.entity.Usuario)" class="member-name-link">findBySupervisorOrderByFechaInicioDesc</a><wbr>(<a href="../entity/Usuario.html" title="class in co.empresa.gestioncontratos.entity">Usuario</a>&nbsp;supervisor)</code></div>
+<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/Optional.html" title="class or interface in java.util" class="external-link">Optional</a><wbr>&lt;<a href="../entity/Contrato.html" title="class in co.empresa.gestioncontratos.entity">Contrato</a>&gt;</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#findByNumeroContrato(java.lang.String)" class="member-name-link">findByNumeroContrato</a><wbr>(<a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;numeroContrato)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3">&nbsp;</div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/Optional.html" title="class or interface in java.util" class="external-link">Optional</a><wbr>&lt;<a href="../entity/Contrato.html" title="class in co.empresa.gestioncontratos.entity">Contrato</a>&gt;</code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#findByUuid(java.util.UUID)" class="member-name-link">findByUuid</a><wbr>(<a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/UUID.html" title="class or interface in java.util" class="external-link">UUID</a>&nbsp;uuid)</code></div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/List.html" title="class or interface in java.util" class="external-link">List</a><wbr>&lt;<a href="../entity/Contrato.html" title="class in co.empresa.gestioncontratos.entity">Contrato</a>&gt;</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#findBySupervisorOrderByFechaInicioDesc(co.empresa.gestioncontratos.entity.Usuario)" class="member-name-link">findBySupervisorOrderByFechaInicioDesc</a><wbr>(<a href="../entity/Usuario.html" title="class in co.empresa.gestioncontratos.entity">Usuario</a>&nbsp;supervisor)</code></div>
+<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3">&nbsp;</div>
+<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/Optional.html" title="class or interface in java.util" class="external-link">Optional</a><wbr>&lt;<a href="../entity/Contrato.html" title="class in co.empresa.gestioncontratos.entity">Contrato</a>&gt;</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#findByUuid(java.util.UUID)" class="member-name-link">findByUuid</a><wbr>(<a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/UUID.html" title="class or interface in java.util" class="external-link">UUID</a>&nbsp;uuid)</code></div>
+<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3">&nbsp;</div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/List.html" title="class or interface in java.util" class="external-link">List</a><wbr>&lt;<a href="../entity/Contrato.html" title="class in co.empresa.gestioncontratos.entity">Contrato</a>&gt;</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#findContratosActivos()" class="member-name-link">findContratosActivos</a>()</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3">&nbsp;</div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/List.html" title="class or interface in java.util" class="external-link">List</a><wbr>&lt;<a href="../entity/Contrato.html" title="class in co.empresa.gestioncontratos.entity">Contrato</a>&gt;</code></div>
 <div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#findContratosConOperario(co.empresa.gestioncontratos.entity.Usuario)" class="member-name-link">findContratosConOperario</a><wbr>(<a href="../entity/Usuario.html" title="class in co.empresa.gestioncontratos.entity">Usuario</a>&nbsp;operario)</code></div>
@@ -269,6 +275,13 @@ extends org.springframework.data.jpa.repository.JpaRepository&lt;<a href="../ent
 </section>
 </li>
 <li>
+<section class="detail" id="findContratosActivos()">
+<h3>findContratosActivos</h3>
+<div class="member-signature"><span class="annotations">@Query("SELECT c FROM Contrato c WHERE c.estado = \'ACTIVO\'")
+</span><span class="return-type"><a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/List.html" title="class or interface in java.util" class="external-link">List</a>&lt;<a href="../entity/Contrato.html" title="class in co.empresa.gestioncontratos.entity">Contrato</a>&gt;</span>&nbsp;<span class="element-name">findContratosActivos</span>()</div>
+</section>
+</li>
+<li>
 <section class="detail" id="countBySupervisorId(java.lang.Long)">
 <h3>countBySupervisorId</h3>
 <div class="member-signature"><span class="annotations">@Query("SELECT COUNT(c) FROM Contrato c WHERE c.supervisor.id = :supervisorId")
@@ -287,22 +300,28 @@ extends org.springframework.data.jpa.repository.JpaRepository&lt;<a href="../ent
 </section>
 </li>
 <li>
-<section class="detail" id="countBySector(co.empresa.gestioncontratos.entity.Sector)">
-<h3>countBySector</h3>
-<div class="member-signature"><span class="return-type">long</span>&nbsp;<span class="element-name">countBySector</span><wbr><span class="parameters">(<a href="../entity/Sector.html" title="class in co.empresa.gestioncontratos.entity">Sector</a>&nbsp;sector)</span></div>
+<section class="detail" id="countByZona(co.empresa.gestioncontratos.entity.Zona)">
+<h3>countByZona</h3>
+<div class="member-signature"><span class="return-type">long</span>&nbsp;<span class="element-name">countByZona</span><wbr><span class="parameters">(<a href="../entity/Zona.html" title="class in co.empresa.gestioncontratos.entity">Zona</a>&nbsp;zona)</span></div>
 </section>
 </li>
 <li>
-<section class="detail" id="countBySectorAndEstado(co.empresa.gestioncontratos.entity.Sector,co.empresa.gestioncontratos.enums.EstadoContrato)">
-<h3>countBySectorAndEstado</h3>
-<div class="member-signature"><span class="return-type">long</span>&nbsp;<span class="element-name">countBySectorAndEstado</span><wbr><span class="parameters">(<a href="../entity/Sector.html" title="class in co.empresa.gestioncontratos.entity">Sector</a>&nbsp;sector,
- <a href="../enums/EstadoContrato.html" title="enum class in co.empresa.gestioncontratos.enums">EstadoContrato</a>&nbsp;estado)</span></div>
+<section class="detail" id="countByPlanTarifa(co.empresa.gestioncontratos.entity.PlanTarifa)">
+<h3>countByPlanTarifa</h3>
+<div class="member-signature"><span class="return-type">int</span>&nbsp;<span class="element-name">countByPlanTarifa</span><wbr><span class="parameters">(<a href="../entity/PlanTarifa.html" title="class in co.empresa.gestioncontratos.entity">PlanTarifa</a>&nbsp;plantarifa)</span></div>
 </section>
 </li>
 <li>
-<section class="detail" id="existsBySector(co.empresa.gestioncontratos.entity.Sector)">
-<h3>existsBySector</h3>
-<div class="member-signature"><span class="return-type">boolean</span>&nbsp;<span class="element-name">existsBySector</span><wbr><span class="parameters">(<a href="../entity/Sector.html" title="class in co.empresa.gestioncontratos.entity">Sector</a>&nbsp;sector)</span></div>
+<section class="detail" id="countByPlanTarifaAndEstado(co.empresa.gestioncontratos.entity.PlanTarifa,co.empresa.gestioncontratos.enums.EstadoContrato)">
+<h3>countByPlanTarifaAndEstado</h3>
+<div class="member-signature"><span class="return-type">int</span>&nbsp;<span class="element-name">countByPlanTarifaAndEstado</span><wbr><span class="parameters">(<a href="../entity/PlanTarifa.html" title="class in co.empresa.gestioncontratos.entity">PlanTarifa</a>&nbsp;plantarifa,
+ <a href="../enums/EstadoContrato.html" title="enum class in co.empresa.gestioncontratos.enums">EstadoContrato</a>&nbsp;estadoContrato)</span></div>
+</section>
+</li>
+<li>
+<section class="detail" id="existsByZona(co.empresa.gestioncontratos.entity.Zona)">
+<h3>existsByZona</h3>
+<div class="member-signature"><span class="return-type">boolean</span>&nbsp;<span class="element-name">existsByZona</span><wbr><span class="parameters">(<a href="../entity/Zona.html" title="class in co.empresa.gestioncontratos.entity">Zona</a>&nbsp;zona)</span></div>
 </section>
 </li>
 <li>
@@ -314,10 +333,10 @@ extends org.springframework.data.jpa.repository.JpaRepository&lt;<a href="../ent
 </section>
 </li>
 <li>
-<section class="detail" id="countContratosActivosPorSector()">
-<h3>countContratosActivosPorSector</h3>
-<div class="member-signature"><span class="annotations">@Query("SELECT c.sector.id, COUNT(c) FROM Contrato c WHERE c.estado = \'ACTIVO\' GROUP BY c.sector.id")
-</span><span class="return-type"><a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/Map.html" title="class or interface in java.util" class="external-link">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Long.html" title="class or interface in java.lang" class="external-link">Long</a>,<wbr><a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Long.html" title="class or interface in java.lang" class="external-link">Long</a>&gt;</span>&nbsp;<span class="element-name">countContratosActivosPorSector</span>()</div>
+<section class="detail" id="countContratosActivosPorZona()">
+<h3>countContratosActivosPorZona</h3>
+<div class="member-signature"><span class="annotations">@Query("SELECT c.zona.id, COUNT(c) FROM Contrato c WHERE c.estado = \'ACTIVO\' GROUP BY c.zona.id")
+</span><span class="return-type"><a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/Map.html" title="class or interface in java.util" class="external-link">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Long.html" title="class or interface in java.lang" class="external-link">Long</a>,<wbr><a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Long.html" title="class or interface in java.lang" class="external-link">Long</a>&gt;</span>&nbsp;<span class="element-name">countContratosActivosPorZona</span>()</div>
 </section>
 </li>
 </ul>

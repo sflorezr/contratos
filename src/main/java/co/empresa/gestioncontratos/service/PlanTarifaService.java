@@ -2,6 +2,8 @@ package co.empresa.gestioncontratos.service;
 
 import co.empresa.gestioncontratos.dto.PlanTarifaDTO;
 import co.empresa.gestioncontratos.entity.PlanTarifa;
+import co.empresa.gestioncontratos.enums.EstadoContrato;
+import co.empresa.gestioncontratos.repository.ContratoRepository;
 import co.empresa.gestioncontratos.repository.PlanTarifaRepository;
 import co.empresa.gestioncontratos.repository.TarifaRepository;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +30,7 @@ public class PlanTarifaService {
 
     private final PlanTarifaRepository planTarifaRepository;
     private final TarifaRepository tarifaRepository;
+    private final ContratoRepository contratoRepository;
 
     // ==================== CONSULTAS ====================
 
@@ -234,4 +237,15 @@ public class PlanTarifaService {
             .map(this::convertirADTO)
             .collect(Collectors.toList());
     }
+    public PlanTarifaDTO convertirADTOConEstadisticas(PlanTarifa planTarifa) {
+        PlanTarifaDTO dto = convertirADTO(planTarifa);
+        
+        // Agregar estadísticas
+        dto.setTotalTarifas(tarifaRepository.countByPlanTarifaUuid(planTarifa.getUuid()));
+        dto.setTarifasActivas(tarifaRepository.countByActivo(true));
+        dto.setTotalContratos(contratoRepository.countByPlanTarifa(planTarifa));
+        dto.setContratosActivos(contratoRepository.countByPlanTarifaAndEstado(planTarifa, EstadoContrato.ACTIVO));
+        
+        return dto;
+    }    
 }

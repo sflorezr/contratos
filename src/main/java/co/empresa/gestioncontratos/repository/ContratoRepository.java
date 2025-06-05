@@ -1,6 +1,7 @@
 package co.empresa.gestioncontratos.repository;
 
 import co.empresa.gestioncontratos.entity.Contrato;
+import co.empresa.gestioncontratos.entity.PlanTarifa;
 import co.empresa.gestioncontratos.entity.Usuario;
 import co.empresa.gestioncontratos.entity.Zona;
 import co.empresa.gestioncontratos.enums.EstadoContrato;
@@ -64,6 +65,9 @@ public interface ContratoRepository extends JpaRepository<Contrato, Long> {
     long countBySupervisorIdAndEstado(@Param("supervisorId") Long supervisorId, @Param("estado") EstadoContrato estado);
 
     long countByZona(Zona zona);
+
+    int countByPlanTarifa(PlanTarifa plantarifa);
+    int countByPlanTarifaAndEstado(PlanTarifa plantarifa,EstadoContrato estadoContrato);
 
     
     boolean existsByZona(Zona zona);

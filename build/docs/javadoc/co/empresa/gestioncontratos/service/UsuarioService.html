@@ -121,8 +121,9 @@ loadScripts(document, 'script');</script>
 <div class="table-header col-second">Method</div>
 <div class="table-header col-last">Description</div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="../entity/Usuario.html" title="class in co.empresa.gestioncontratos.entity">Usuario</a></code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#actualizar(java.util.UUID,co.empresa.gestioncontratos.dto.UsuarioDTO)" class="member-name-link">actualizar</a><wbr>(<a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/UUID.html" title="class or interface in java.util" class="external-link">UUID</a>&nbsp;uuid,
- <a href="../dto/UsuarioDTO.html" title="class in co.empresa.gestioncontratos.dto">UsuarioDTO</a>&nbsp;usuarioDTO)</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#actualizar(java.util.UUID,co.empresa.gestioncontratos.dto.UsuarioDTO,org.springframework.web.multipart.MultipartFile)" class="member-name-link">actualizar</a><wbr>(<a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/UUID.html" title="class or interface in java.util" class="external-link">UUID</a>&nbsp;uuid,
+ <a href="../dto/UsuarioDTO.html" title="class in co.empresa.gestioncontratos.dto">UsuarioDTO</a>&nbsp;usuarioDTO,
+ org.springframework.web.multipart.MultipartFile&nbsp;fotoFile)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>org.springframework.data.domain.Page<wbr>&lt;<a href="../entity/Usuario.html" title="class in co.empresa.gestioncontratos.entity">Usuario</a>&gt;</code></div>
 <div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#buscarConFiltros(co.empresa.gestioncontratos.enums.PerfilUsuario,java.lang.String,org.springframework.data.domain.Pageable)" class="member-name-link">buscarConFiltros</a><wbr>(<a href="../enums/PerfilUsuario.html" title="enum class in co.empresa.gestioncontratos.enums">PerfilUsuario</a>&nbsp;perfil,
@@ -151,7 +152,8 @@ loadScripts(document, 'script');</script>
 <div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#convertirADTO(co.empresa.gestioncontratos.entity.Usuario)" class="member-name-link">convertirADTO</a><wbr>(<a href="../entity/Usuario.html" title="class in co.empresa.gestioncontratos.entity">Usuario</a>&nbsp;usuario)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="../entity/Usuario.html" title="class in co.empresa.gestioncontratos.entity">Usuario</a></code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#crear(co.empresa.gestioncontratos.dto.UsuarioDTO)" class="member-name-link">crear</a><wbr>(<a href="../dto/UsuarioDTO.html" title="class in co.empresa.gestioncontratos.dto">UsuarioDTO</a>&nbsp;usuarioDTO)</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#crear(co.empresa.gestioncontratos.dto.UsuarioDTO,org.springframework.web.multipart.MultipartFile)" class="member-name-link">crear</a><wbr>(<a href="../dto/UsuarioDTO.html" title="class in co.empresa.gestioncontratos.dto">UsuarioDTO</a>&nbsp;usuarioDTO,
+ org.springframework.web.multipart.MultipartFile&nbsp;fotoFile)</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>void</code></div>
 <div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#eliminar(java.util.UUID)" class="member-name-link">eliminar</a><wbr>(<a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/UUID.html" title="class or interface in java.util" class="external-link">UUID</a>&nbsp;uuid)</code></div>
@@ -238,16 +240,18 @@ loadScripts(document, 'script');</script>
 </section>
 </li>
 <li>
-<section class="detail" id="crear(co.empresa.gestioncontratos.dto.UsuarioDTO)">
+<section class="detail" id="crear(co.empresa.gestioncontratos.dto.UsuarioDTO,org.springframework.web.multipart.MultipartFile)">
 <h3>crear</h3>
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type"><a href="../entity/Usuario.html" title="class in co.empresa.gestioncontratos.entity">Usuario</a></span>&nbsp;<span class="element-name">crear</span><wbr><span class="parameters">(<a href="../dto/UsuarioDTO.html" title="class in co.empresa.gestioncontratos.dto">UsuarioDTO</a>&nbsp;usuarioDTO)</span></div>
+<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type"><a href="../entity/Usuario.html" title="class in co.empresa.gestioncontratos.entity">Usuario</a></span>&nbsp;<span class="element-name">crear</span><wbr><span class="parameters">(<a href="../dto/UsuarioDTO.html" title="class in co.empresa.gestioncontratos.dto">UsuarioDTO</a>&nbsp;usuarioDTO,
+ org.springframework.web.multipart.MultipartFile&nbsp;fotoFile)</span></div>
 </section>
 </li>
 <li>
-<section class="detail" id="actualizar(java.util.UUID,co.empresa.gestioncontratos.dto.UsuarioDTO)">
+<section class="detail" id="actualizar(java.util.UUID,co.empresa.gestioncontratos.dto.UsuarioDTO,org.springframework.web.multipart.MultipartFile)">
 <h3>actualizar</h3>
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type"><a href="../entity/Usuario.html" title="class in co.empresa.gestioncontratos.entity">Usuario</a></span>&nbsp;<span class="element-name">actualizar</span><wbr><span class="parameters">(<a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/UUID.html" title="class or interface in java.util" class="external-link">UUID</a>&nbsp;uuid,
- <a href="../dto/UsuarioDTO.html" title="class in co.empresa.gestioncontratos.dto">UsuarioDTO</a>&nbsp;usuarioDTO)</span></div>
+ <a href="../dto/UsuarioDTO.html" title="class in co.empresa.gestioncontratos.dto">UsuarioDTO</a>&nbsp;usuarioDTO,
+ org.springframework.web.multipart.MultipartFile&nbsp;fotoFile)</span></div>
 </section>
 </li>
 <li>

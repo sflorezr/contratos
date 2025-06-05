@@ -1,9 +1,9 @@
-# fly.toml app configuration file generated for contratosodms on 2025-05-30T15:02:57-05:00
+# fly.toml app configuration file generated for contratosodms-holy-tree-1155 on 2025-06-05T09:11:42-05:00
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = 'contratosodms'
+app = 'contratosodms-holy-tree-1155'
 primary_region = 'bog'
 
 [build]

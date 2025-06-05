@@ -110,10 +110,10 @@ extends org.springframework.data.jpa.repository.JpaRepository&lt;<a href="../ent
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/List.html" title="class or interface in java.util" class="external-link">List</a><wbr>&lt;<a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>[]&gt;</code></div>
 <div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#contarTarifasPorPlan()" class="member-name-link">contarTarifasPorPlan</a>()</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3">&nbsp;</div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code>long</code></div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code>int</code></div>
 <div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#countByActivo(java.lang.Boolean)" class="member-name-link">countByActivo</a><wbr>(<a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Boolean.html" title="class or interface in java.lang" class="external-link">Boolean</a>&nbsp;activo)</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3">&nbsp;</div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code>long</code></div>
+<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code>int</code></div>
 <div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#countByPlanTarifaUuid(java.util.UUID)" class="member-name-link">countByPlanTarifaUuid</a><wbr>(<a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/UUID.html" title="class or interface in java.util" class="external-link">UUID</a>&nbsp;planTarifaUuid)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3">&nbsp;</div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code>long</code></div>
@@ -227,7 +227,7 @@ extends org.springframework.data.jpa.repository.JpaRepository&lt;<a href="../ent
 <li>
 <section class="detail" id="countByActivo(java.lang.Boolean)">
 <h3>countByActivo</h3>
-<div class="member-signature"><span class="return-type">long</span>&nbsp;<span class="element-name">countByActivo</span><wbr><span class="parameters">(<a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Boolean.html" title="class or interface in java.lang" class="external-link">Boolean</a>&nbsp;activo)</span></div>
+<div class="member-signature"><span class="return-type">int</span>&nbsp;<span class="element-name">countByActivo</span><wbr><span class="parameters">(<a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Boolean.html" title="class or interface in java.lang" class="external-link">Boolean</a>&nbsp;activo)</span></div>
 </section>
 </li>
 <li>
@@ -299,7 +299,7 @@ extends org.springframework.data.jpa.repository.JpaRepository&lt;<a href="../ent
 <section class="detail" id="countByPlanTarifaUuid(java.util.UUID)">
 <h3>countByPlanTarifaUuid</h3>
 <div class="member-signature"><span class="annotations">@Query("SELECT COUNT(t) FROM Tarifa t WHERE t.planTarifa.uuid = :planTarifaUuid")
-</span><span class="return-type">long</span>&nbsp;<span class="element-name">countByPlanTarifaUuid</span><wbr><span class="parameters">(@Param("planTarifaUuid")
+</span><span class="return-type">int</span>&nbsp;<span class="element-name">countByPlanTarifaUuid</span><wbr><span class="parameters">(@Param("planTarifaUuid")
  <a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/UUID.html" title="class or interface in java.util" class="external-link">UUID</a>&nbsp;planTarifaUuid)</span></div>
 </section>
 </li>

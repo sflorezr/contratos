@@ -4,10 +4,11 @@ let planesTarifa = [];
 let usuarioActual = null;
 let modalPlanTarifa = null;
 let currentEditUuid = null;
-
+let modalCargarExcel = null;
 // Inicialización
 document.addEventListener('DOMContentLoaded', function() {
     modalPlanTarifa = new bootstrap.Modal(document.getElementById('modalPlanTarifa'));
+    modalCargarExcel = new bootstrap.Modal(document.getElementById('modalCargarExcel'));  
     inicializar();
     
     // Event listeners
@@ -16,11 +17,36 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('btnAplicarFiltros').addEventListener('click', aplicarFiltros);
     document.getElementById('savePlanTarifaBtn').addEventListener('click', savePlanTarifa);
     document.getElementById('btnAgregarTarifas').addEventListener('click', abrirModalTarifas);
-    
+
+    document.getElementById('btnGestionarTarifas').addEventListener('click', gestionarTarifas);
+     
     // Filtro en tiempo real
     document.getElementById('filtroNombre').addEventListener('input', aplicarFiltros);
 });
 
+function setupDynamicEventListeners() {
+    // Solo agregar si los elementos existen
+    const btnCargarExcel = document.getElementById('btnCargarExcel');
+    const btnProcesarExcel = document.getElementById('btnProcesarExcel');
+    const btnGestionarTarifas = document.getElementById('btnGestionarTarifas');
+    const btnDescargarPlantilla = document.getElementById('btnDescargarPlantilla');
+    
+    if (btnCargarExcel) {
+        btnCargarExcel.addEventListener('click', abrirModalExcel);
+    }
+    
+    if (btnProcesarExcel) {
+        btnProcesarExcel.addEventListener('click', procesarArchivoExcel);
+    }
+    
+    if (btnGestionarTarifas) {
+        btnGestionarTarifas.addEventListener('click', gestionarTarifas);
+    }
+    
+    if (btnDescargarPlantilla) {
+        btnDescargarPlantilla.addEventListener('click', descargarPlantilla);
+    }
+}
 async function inicializar() {
     cargarUsuarioActual();
     await Promise.all([
@@ -28,6 +54,149 @@ async function inicializar() {
         cargarEstadisticas()
     ]);
 }
+
+function abrirModalExcel() {
+    if (!currentEditUuid) {
+        showAlert('Debe seleccionar un plan de tarifa primero', 'warning');
+        return;
+    }
+    
+    // Limpiar formulario
+    document.getElementById('excelUploadForm').reset();
+    document.getElementById('uploadProgress').classList.add('d-none');
+    document.getElementById('uploadResults').classList.add('d-none');
+    
+    modalCargarExcel.show();
+}
+
+async function descargarPlantilla() {
+    try {
+        const response = await fetch('/admin/tarifas/plantilla-excel');
+        if (response.ok) {
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'plantilla_tarifas.xls';
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        } else {
+            showAlert('Error al descargar plantilla', 'danger');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showAlert('Error de conexión', 'danger');
+    }
+}
+
+async function procesarArchivoExcel() {
+    const fileInput = document.getElementById('excelFile');
+    
+    if (!fileInput.files || fileInput.files.length === 0) {
+        showAlert('Debe seleccionar un archivo', 'warning');
+        return;
+    }
+    
+    if (!currentEditUuid) {
+        showAlert('Error: No se ha seleccionado un plan de tarifa', 'danger');
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('archivo', fileInput.files[0]);
+    formData.append('planTarifaUuid', currentEditUuid);
+    
+    // Mostrar progreso
+    document.getElementById('uploadProgress').classList.remove('d-none');
+    document.getElementById('uploadResults').classList.add('d-none');
+    document.getElementById('btnProcesarExcel').disabled = true;
+    
+    try {
+        const response = await fetch('/admin/tarifas/cargar-excel', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+            mostrarResultadosExcel(result);
+            showAlert('Archivo procesado exitosamente', 'success');
+            
+            // Recargar tarifas del plan
+            await cargarDetallesPlan(currentEditUuid);
+        } else {
+            showAlert(result.message || 'Error al procesar archivo', 'danger');
+        }
+        
+    } catch (error) {
+        console.error('Error:', error);
+        showAlert('Error de conexión', 'danger');
+    } finally {
+        document.getElementById('uploadProgress').classList.add('d-none');
+        document.getElementById('btnProcesarExcel').disabled = false;
+    }
+}
+
+function mostrarResultadosExcel(result) {
+    const container = document.getElementById('resultsContent');
+    
+    let html = `
+        <div class="row g-2 mb-3">
+            <div class="col-md-4">
+                <div class="card text-center">
+                    <div class="card-body py-2">
+                        <h6 class="card-title text-primary">${result.filasProcesadas || 0}</h6>
+                        <small class="text-muted">Filas procesadas</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-center">
+                    <div class="card-body py-2">
+                        <h6 class="card-title text-success">${result.tarifasCreadas || 0}</h6>
+                        <small class="text-muted">Tarifas creadas</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-center">
+                    <div class="card-body py-2">
+                        <h6 class="card-title text-danger">${result.errores ? result.errores.length : 0}</h6>
+                        <small class="text-muted">Errores</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    if (result.errores && result.errores.length > 0) {
+        html += `
+            <div class="alert alert-warning">
+                <h6>Errores encontrados:</h6>
+                <ul class="mb-0">
+                    ${result.errores.map(error => `<li>${error}</li>`).join('')}
+                </ul>
+            </div>
+        `;
+    }
+    
+    container.innerHTML = html;
+    document.getElementById('uploadResults').classList.remove('d-none');
+}
+
+function gestionarTarifas() {
+    if (!currentEditUuid) {
+        showAlert('Debe seleccionar un plan de tarifa primero', 'warning');
+        return;
+    }
+    
+    // Redirigir a página de gestión de tarifas
+    window.location.href = `/admin/tarifas?planTarifaUuid=${currentEditUuid}`;
+}
+
 
 function cargarUsuarioActual() {
     // En una implementación real, esto vendría del servidor
@@ -45,11 +214,12 @@ async function cargarPlanesTarifa() {
     showLoading(true);
     try {
         const response = await fetch('/admin/planes-tarifa/api/listar');
+        console.log(response);
         if (response.ok) {
             planesTarifa = await response.json();
             renderPlanesTarifa();
         } else {
-            showAlert('Error al cargar planes de tarifa', 'danger');
+            showAlert('Error al cargar planes de tarifa en el api', 'danger');
         }
     } catch (error) {
         console.error('Error:', error);
@@ -231,6 +401,9 @@ async function editarPlanTarifa(uuid) {
         // Mostrar secciones adicionales en modo edición
         document.getElementById('tarifasSection').classList.remove('d-none');
         document.getElementById('contratosSection').classList.remove('d-none');
+        
+        // Configurar event listeners dinámicos DESPUÉS de mostrar la sección
+        setupDynamicEventListeners();
         
         // Cargar detalles del plan
         await cargarDetallesPlan(uuid);
@@ -538,7 +711,7 @@ function showLoading(show) {
 
 // Función placeholder para abrir modal de tarifas
 function abrirModalTarifas() {
-    showAlert('Funcionalidad de gestión de tarifas en desarrollo', 'info');
+    gestionarTarifas();
 }
 
 // Si no tienes SweetAlert2, usar confirm nativo

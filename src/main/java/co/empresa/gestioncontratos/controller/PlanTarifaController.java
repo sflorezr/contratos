@@ -68,7 +68,21 @@ public class PlanTarifaController {
             return "admin/planes-tarifa";
         }
     }
-
+    @GetMapping("/api/listar")
+    @ResponseBody
+    public ResponseEntity<List<PlanTarifaDTO>> listarPlanesAPI() {
+        try {
+            List<PlanTarifa> planes = planTarifaService.listarTodos();
+            List<PlanTarifaDTO> planesDTO = planes.stream()
+                .map(planTarifaService::convertirADTOConEstadisticas) // Con estadísticas completas
+                .collect(Collectors.toList());
+            
+            return ResponseEntity.ok(planesDTO);
+        } catch (Exception e) {
+            log.error("Error al listar planes de tarifa: ", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
     @GetMapping("/resumen/general")
     public ResponseEntity<Map<String, Object>> obtenerResumenGeneral() {
         try {
