@@ -108,60 +108,65 @@ async function cargarServicios() {
 // Funciones de UI
 function crearTarifaCard(tarifa) {
     const card = document.createElement('div');
-    card.className = 'tarifa-card';
+    card.className = 'contract-card'; // Usar la misma clase que zonas
     card.innerHTML = `
-        <div class="tarifa-header">
-            <div>
-                <h6 class="mb-1 text-primary">${tarifa.planTarifaNombre || 'Plan no disponible'}</h6>
-                <h5 class="mb-2">${tarifa.servicioNombre || 'Servicio no disponible'}</h5>
-                <span class="estado-badge ${tarifa.activo ? 'estado-activo' : 'estado-inactivo'}">
+        <div class="contract-header">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h5 class="mb-1">
+                        <i class="fas fa-tags text-primary me-2"></i>
+                        ${tarifa.servicioNombre || 'Servicio no disponible'}
+                    </h5>
+                    <p class="text-muted mb-0">${tarifa.planTarifaNombre || 'Plan no disponible'}</p>
+                </div>
+                <span class="estado-badge ${tarifa.activo ? 'estado-activo' : 'estado-cancelado'}">
                     ${tarifa.activo ? 'Activa' : 'Inactiva'}
                 </span>
             </div>
-            <div class="action-buttons">
-                <button class="btn btn-sm btn-outline-primary" onclick="editarTarifa('${tarifa.uuid}')" title="Editar">
-                    <i class="fas fa-edit"></i>
-                </button>
-                <button class="btn btn-sm ${tarifa.activo ? 'btn-outline-danger' : 'btn-outline-success'}"
-                        onclick="cambiarEstado('${tarifa.uuid}', ${!tarifa.activo})" 
-                        title="${tarifa.activo ? 'Desactivar' : 'Activar'}">
-                    <i class="fas fa-${tarifa.activo ? 'times' : 'check'}"></i>
-                </button>
-                <button class="btn btn-sm btn-outline-danger" onclick="eliminarTarifa('${tarifa.uuid}')" title="Eliminar">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </div>
         </div>
-        <div class="row g-3 mt-3">
-            <div class="col-md-6">
-                <div class="precio-container">
-                    <div class="precio-item">
+        <div class="contract-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
                         <small class="text-muted d-block">Precio Urbano</small>
-                        <span class="precio-badge">${formatearPrecio(tarifa.precioUrbano)}</span>
+                        <span class="fw-bold text-success">
+                            <i class="fas fa-dollar-sign me-1"></i>${formatearPrecio(tarifa.precioUrbano)}
+                        </span>
                     </div>
                 </div>
-            </div>
-            <div class="col-md-6">
-                <div class="precio-container">
-                    <div class="precio-item">
+                <div class="col-md-6">
+                    <div class="mb-3">
                         <small class="text-muted d-block">Precio Rural</small>
-                        <span class="precio-badge">${formatearPrecio(tarifa.precioRural)}</span>
+                        <span class="fw-bold text-info">
+                            <i class="fas fa-dollar-sign me-1"></i>${formatearPrecio(tarifa.precioRural)}
+                        </span>
                     </div>
                 </div>
             </div>
-        </div>
-        <div class="row g-2 mt-2">
-            <div class="col-12">
+            
+            <div class="mt-3">
                 <small class="text-muted">
                     <i class="fas fa-calendar me-1"></i>
                     Creada: ${formatearFecha(tarifa.fechaCreacion)}
                 </small>
             </div>
         </div>
+        <div class="contract-footer">
+            <div class="action-buttons">
+                <button class="btn btn-sm btn-outline-primary" onclick="editarTarifa('${tarifa.uuid}')" title="Editar">
+                    <i class="fas fa-edit me-1"></i>Editar
+                </button>
+                <button class="btn btn-sm btn-outline-warning" onclick="cambiarEstado('${tarifa.uuid}', ${!tarifa.activo})" title="${tarifa.activo ? 'Desactivar' : 'Activar'}">
+                    <i class="fas fa-exchange-alt me-1"></i>Estado
+                </button>
+                <button class="btn btn-sm btn-outline-danger" onclick="eliminarTarifa('${tarifa.uuid}')" title="Eliminar">
+                    <i class="fas fa-trash me-1"></i>Eliminar
+                </button>
+            </div>
+        </div>
     `;
     return card;
 }
-
 function mostrarLoading(show) {
     document.getElementById('loadingIndicator').classList.toggle('d-none', !show);
 }

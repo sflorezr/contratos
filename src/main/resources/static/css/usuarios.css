@@ -1,6 +1,10 @@
 :root {
     --primary: #667eea;
     --secondary: #764ba2;
+    --success: #48bb78;
+    --warning: #f6ad55;
+    --danger: #fc8181;
+    --info: #4299e1;
 }
 
 body {
@@ -130,12 +134,13 @@ body {
     border-radius: 8px;
     margin-top: 10px;
 }
+
 .photo-upload-section {
-background-color: #f8f9fa;
-padding: 20px;
-border-radius: 8px;
-margin-bottom: 20px;
-text-align: center;
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    text-align: center;
 }
 
 .photo-preview {
@@ -181,4 +186,189 @@ text-align: center;
 .camera-controls {
     text-align: center;
     margin-top: 10px;
+}
+
+/* Estilos específicos para tarifas */
+.tarifa-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    padding: 20px;
+    margin-bottom: 20px;
+    transition: all 0.3s;
+}
+
+.tarifa-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
+
+.tarifa-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    margin-bottom: 15px;
+}
+
+.estado-badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.estado-activo {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+}
+
+.estado-inactivo {
+    background-color: #ffebee;
+    color: #c62828;
+}
+
+.precio-badge {
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.filter-section {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 25px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.stats-row {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 25px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.stat-card {
+    text-align: center;
+    padding: 15px;
+    border-right: 1px solid #e9ecef;
+}
+
+.stat-card:last-child {
+    border-right: none;
+}
+
+.stat-number {
+    font-size: 28px;
+    font-weight: bold;
+    color: var(--primary);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #6c757d;
+}
+
+.empty-state i {
+    font-size: 64px;
+    margin-bottom: 20px;
+    opacity: 0.5;
+}
+
+.form-section {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+}
+
+.precio-container {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.precio-item {
+    flex: 1;
+    min-width: 120px;
+}
+.stats-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: transform 0.3s;
+    text-align: center;
+}
+
+.stats-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.stats-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    margin: 0 auto 10px;
+}
+
+.contract-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+    overflow: hidden;
+    transition: all 0.3s;
+}
+
+.contract-card:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
+
+.contract-header {
+    padding: 20px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.contract-body {
+    padding: 20px;
+}
+
+.contract-footer {
+    padding: 15px 20px;
+    background-color: #f8f9fa;
+    border-top: 1px solid #e9ecef;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.user-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
+    background-color: #e9ecef;
+    border-radius: 20px;
+    font-size: 12px;
+    margin-right: 5px;
+    margin-bottom: 5px;
+}
+
+.user-badge i {
+    margin-right: 5px;
+    font-size: 10px;
 }

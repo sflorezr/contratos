@@ -19,6 +19,7 @@ import java.util.UUID;
 public interface PlanTarifaRepository extends JpaRepository<PlanTarifa, Long> {
     
     Optional<PlanTarifa> findByUuid(UUID uuid);
+    List<PlanTarifa> findAll();
     
     Optional<PlanTarifa> findByNombre(String nombre);
      List<PlanTarifa> findByActivoTrueOrderByNombreAsc();

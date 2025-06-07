@@ -66,4 +66,20 @@ public interface TarifaRepository extends JpaRepository<Tarifa, Long> {
     
     @Query("SELECT COUNT(t) FROM Tarifa t WHERE t.planTarifa.uuid = :planTarifaUuid")
     int countByPlanTarifaUuid(@Param("planTarifaUuid") UUID planTarifaUuid);
+
+
+    @Query("SELECT t FROM Tarifa t " +
+        "JOIN t.planTarifa pt " +
+        "JOIN t.servicio s " +
+        "WHERE (:filtro IS NULL OR " +
+        "       LOWER(pt.nombre) LIKE LOWER(CONCAT('%', :filtro, '%')) OR " +
+        "       LOWER(s.nombre) LIKE LOWER(CONCAT('%', :filtro, '%')) OR " +
+        "       LOWER(s.descripcion) LIKE LOWER(CONCAT('%', :filtro, '%'))) " +
+        "AND (:activo IS NULL OR t.activo = :activo) " +
+        "AND (:planTarifaUuid IS NULL OR pt.uuid = :planTarifaUuid) " +
+        "AND (:servicioUuid IS NULL OR s.uuid = :servicioUuid) ")
+    List<Tarifa> buscarConFiltros(@Param("filtro") String filtro,
+                                @Param("activo") Boolean activo,
+                                @Param("planTarifaUuid") UUID planTarifaUuid,
+                                @Param("servicioUuid") UUID servicioUuid); 
 }

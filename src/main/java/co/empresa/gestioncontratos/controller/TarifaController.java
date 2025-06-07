@@ -97,7 +97,12 @@ public class TarifaController {
             @RequestParam(required = false) UUID planTarifaUuid,
             @RequestParam(required = false) UUID servicioUuid) {
         try {
-            List<TarifaDTO> tarifas = tarifaService.listarTarifasConDetalles(planTarifaUuid);
+            List<TarifaDTO> tarifas = tarifaService.listarTarifasConFiltros(
+                filtro, 
+                activo, 
+                planTarifaUuid, 
+                servicioUuid
+            );
             return ResponseEntity.ok(tarifas);
         } catch (Exception e) {
             log.error("Error al listar tarifas con detalles: {}", e.getMessage());

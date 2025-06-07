@@ -70,6 +70,16 @@ public class TarifaService {
     }
 
     @Transactional(readOnly = true)
+    public List<PlanTarifa>  listarTodos() {
+        log.info("Listando tarifas del plan: {}", "");
+        
+        List<PlanTarifa> planTarifa = planTarifaRepository.findAll();
+            
+            
+        return planTarifa;
+    }
+
+    @Transactional(readOnly = true)
     public List<Tarifa> listarPorServicio(UUID servicioUuid) {
         log.info("Listando tarifas del servicio: {}", servicioUuid);
         
@@ -502,8 +512,11 @@ public class TarifaService {
             if (precioRural == null || precioRural.compareTo(BigDecimal.ZERO) <= 0) {
                 throw new RuntimeException("Precio rural debe ser mayor a 0");
             }
+            Optional<Servicio> servicio = servicioRepository.findByNombre(codigoServicio);            
+            UUID uuidServicio = servicio.get().getUuid();
             
-            return TarifaDTO.builder()                
+            return TarifaDTO.builder()  
+                .servicioUuid(uuidServicio)              
                 .precioUrbano(precioUrbano)
                 .precioRural(precioRural)
                 .planTarifaUuid(planTarifaUuid)
@@ -568,12 +581,12 @@ public class TarifaService {
             
             // Crear filas de ejemplo
             HSSFRow row1 = sheet.createRow(1);
-            row1.createCell(0).setCellValue("SERV001");
+            row1.createCell(0).setCellValue("REVISION CON CAMBIO DE MEDIDOR MONOFASICO BIFASICO O POLIFASICO DE MEDIDA DIRECTA. A");
             row1.createCell(1).setCellValue(50000.0);
             row1.createCell(2).setCellValue(45000.0);
             
             HSSFRow row2 = sheet.createRow(2);
-            row2.createCell(0).setCellValue("SERV002");
+            row2.createCell(0).setCellValue("REVISION CON CAMBIO DE MEDIDOR MONOFASICO BIFASICO O POLIFASICO DE MEDIDA DIRECTA. B");
             row2.createCell(1).setCellValue(75000.0);
             row2.createCell(2).setCellValue(70000.0);
             
@@ -593,6 +606,33 @@ public class TarifaService {
         } catch (Exception e) {
             log.error("Error generando plantilla Excel: ", e);
             throw new RuntimeException("Error al generar plantilla: " + e.getMessage());
+        }
+    }    
+    @Transactional(readOnly = true)
+    public List<TarifaDTO> listarTarifasConFiltros(String filtro, Boolean activo, 
+                                                UUID planTarifaUuid, UUID servicioUuid) {
+        log.info("Listando tarifas con filtros - plan: {}, servicio: {}, activo: {}, filtro: {}", 
+                planTarifaUuid, servicioUuid, activo, filtro);
+        
+        try {
+            List<Tarifa> tarifas;
+            
+            if (planTarifaUuid != null || servicioUuid != null || activo != null || 
+                (filtro != null && !filtro.trim().isEmpty())) {
+                // Usar filtros específicos
+                tarifas = tarifaRepository.buscarConFiltros(filtro, activo, planTarifaUuid, servicioUuid);
+            } else {
+                // Listar todas si no hay filtros
+                tarifas = tarifaRepository.findAll();
+            }
+            
+            return tarifas.stream()
+                .map(this::convertirADTOConDetalles)
+                .collect(Collectors.toList());
+                
+        } catch (Exception e) {
+            log.error("Error al listar tarifas con filtros: ", e);
+            throw new RuntimeException("Error al obtener tarifas", e);
         }
     }    
 }

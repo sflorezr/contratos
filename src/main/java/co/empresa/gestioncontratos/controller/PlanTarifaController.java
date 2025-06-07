@@ -123,10 +123,11 @@ public class PlanTarifaController {
 
 
     @GetMapping("/{uuid}")
-    public ResponseEntity<PlanTarifa> buscarPorUuid(@PathVariable UUID uuid) {
+    public ResponseEntity<PlanTarifaDTO> buscarPorUuid(@PathVariable UUID uuid) {
         try {
             PlanTarifa plan = planTarifaService.buscarPorUuid(uuid);
-            return ResponseEntity.ok(plan);
+            PlanTarifaDTO planDTO = planTarifaService.convertirADTO(plan);
+            return ResponseEntity.ok(planDTO);
         } catch (RuntimeException e) {
             log.error("Plan no encontrado: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
@@ -139,8 +140,13 @@ public class PlanTarifaController {
     @GetMapping("/detalles/{uuid}")
     public ResponseEntity<Map<String, Object>> obtenerDetallePlan(@PathVariable UUID uuid) {
         try {
-            Map<String, Object> detalle = planTarifaService.obtenerDetallePlan(uuid);
+            Map<String, Object> detalle = null;
+            if(!uuid.toString().isEmpty()){
+             detalle = planTarifaService.obtenerDetallePlan(uuid);
             return ResponseEntity.ok(detalle);
+            }else{
+              return ResponseEntity.ok(detalle);
+            }                    
         } catch (RuntimeException e) {
             log.error("Error al obtener detalle del plan: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
