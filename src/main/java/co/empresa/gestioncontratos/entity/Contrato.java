@@ -14,9 +14,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -39,16 +37,6 @@ public class Contrato {
     private String numeroContrato;
 
     @NotNull
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "zona_id", nullable = false)
-    private Zona zona;
-
-    @NotNull
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "plan_tarifa_id", nullable = false)
-    private PlanTarifa planTarifa;
-
-    @NotNull
     @Column(name = "fecha_inicio", nullable = false)
     private LocalDate fechaInicio;
 
@@ -69,15 +57,6 @@ public class Contrato {
     @JoinColumn(name = "supervisor_id")
     private Usuario supervisor;
 
-    @ManyToMany
-    @JoinTable(
-        name = "contrato_coordinador",
-        joinColumns = @JoinColumn(name = "contrato_id"),
-        inverseJoinColumns = @JoinColumn(name = "coordinador_id")
-    )
-    
-    private Set<Usuario> coordinadores = new HashSet<>();
-    
     @CreationTimestamp
     @Column(name = "fecha_creacion", nullable = false, updatable = false)
     private LocalDateTime fechaCreacion;
@@ -86,12 +65,19 @@ public class Contrato {
     @Column(name = "fecha_actualizacion", nullable = false)
     private LocalDateTime fechaActualizacion;
 
-    // Relaciones
+    // NUEVA RELACIÓN: Múltiples zonas a través de ContratoZona
     @OneToMany(mappedBy = "contrato", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<ContratoCoordinador> contratoCoordinadores;
+    private List<ContratoZona> contratoZonas;
 
+    // Relación existente con predios (se mantiene)
     @OneToMany(mappedBy = "contrato", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<ContratoPredio> contratoPredios;
+
+    // ELIMINADAS: 
+    // - zona (ManyToOne)
+    // - planTarifa (ManyToOne) 
+    // - coordinadores (ManyToMany)
+    // - contratoCoordinadores (OneToMany)
 
     @PrePersist
     public void prePersist() {
@@ -128,9 +114,7 @@ public class Contrato {
     public boolean estaVencido() {
         return LocalDate.now().isAfter(fechaFin);
     }
-    public List<ContratoPredio> getPredios() {
-        return contratoPredios;
-    }
+
     public boolean estaVigente() {
         LocalDate hoy = LocalDate.now();
         return !hoy.isBefore(fechaInicio) && !hoy.isAfter(fechaFin) && estaActivo();
@@ -191,23 +175,48 @@ public class Contrato {
         return supervisor != null;
     }
 
-    public boolean tieneCoordinadores() {
-        return contratoCoordinadores != null && 
-               contratoCoordinadores.stream().anyMatch(cc -> cc.getActivo());
+    // NUEVOS MÉTODOS para trabajar con múltiples zonas
+    public boolean tieneZonas() {
+        return contratoZonas != null && !contratoZonas.isEmpty() &&
+               contratoZonas.stream().anyMatch(ContratoZona::estaActivo);
+    }
+
+    public int getCantidadZonas() {
+        if (contratoZonas == null) {
+            return 0;
+        }
+        return (int) contratoZonas.stream()
+                .filter(ContratoZona::estaActivo)
+                .count();
+    }
+
+    public int getCantidadCoordinadoresZona() {
+        if (contratoZonas == null) {
+            return 0;
+        }
+        return (int) contratoZonas.stream()
+                .filter(ContratoZona::estaActivo)
+                .filter(ContratoZona::tieneCoordinadorZona)
+                .count();
+    }
+
+    public int getCantidadCoordinadoresOperativos() {
+        if (contratoZonas == null) {
+            return 0;
+        }
+        return (int) contratoZonas.stream()
+                .filter(ContratoZona::estaActivo)
+                .filter(ContratoZona::tieneCoordinadorOperativo)
+                .count();
+    }
+
+    public List<ContratoPredio> getPredios() {
+        return contratoPredios;
     }
 
     public boolean tienePredios() {
         return contratoPredios != null && 
                contratoPredios.stream().anyMatch(cp -> cp.getActivo());
-    }
-
-    public int getCantidadCoordinadores() {
-        if (contratoCoordinadores == null) {
-            return 0;
-        }
-        return (int) contratoCoordinadores.stream()
-                .filter(cc -> cc.getActivo())
-                .count();
     }
 
     public int getCantidadPredios() {
@@ -219,15 +228,6 @@ public class Contrato {
                 .count();
     }
 
-    public String getNombreZona() {
-        return zona != null ? zona.getNombre() : "Sin Zona";
-    }
-
-    // Método para obtener el nombre del plan de tarifa
-    public String getNombrePlanTarifa() {
-        return planTarifa != null ? planTarifa.getNombre() : "Sin plan";
-    }
-
     // Método para obtener el nombre del supervisor
     public String getNombreSupervisor() {
         return supervisor != null ? supervisor.getNombreCompleto() : "Sin asignar";
@@ -237,8 +237,6 @@ public class Contrato {
     public boolean puedeSerEditado() {
         return estaActivo() && !estaVencido();
     }
-
-    // Método para verificar si puede ser eliminado
 
     @Override
     public String toString() {

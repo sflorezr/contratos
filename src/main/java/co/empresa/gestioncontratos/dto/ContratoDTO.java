@@ -30,48 +30,41 @@ public class ContratoDTO {
     
     @NotNull(message = "La fecha de fin es requerida")
     private LocalDate fechaFin;
-    
-    @NotNull(message = "El plan de tarifa es requerido")
-    private UUID planTarifaUuid;
 
-    // CORREGIDO: Cambiar a zonaUuid para ser consistente con el frontend
-    @NotNull(message = "La zona es requerida")
-    private UUID zonaUuid;
-    
-    // CORREGIDO: Cambiar a supervisorUuid para ser consistente con el frontend
     private UUID supervisorUuid;
     
+    private EstadoContrato estado;
+    
+    // NUEVA ESTRUCTURA: Lista de zonas con sus respectivos planes de tarifa y coordinadores
     @Builder.Default
-    private List<UUID> coordinadorUuids = new ArrayList<>();
+    private List<ContratoZonaDTO> zonas = new ArrayList<>();
     
     @Builder.Default
     private List<UUID> predioUuids = new ArrayList<>();
     
-    private EstadoContrato estado;
-    
     // Campos adicionales para vistas (no se persisten, solo para mostrar)
-    private String planTarifaNombre;
     private String supervisorNombre;
     private Integer totalPredios;
     private Integer prediosAsignados;
     private Integer totalOperarios;
     private Double porcentajeAvance;
-    private Integer cantidadCoordinadores;
     
-    // Campos para zonas
-    private String zonaNombre;
-    private Integer totalZonas;    
-    private Integer totalSectores;
-    private Integer sectoresActivos;
-    
-
-    // Lista de coordinadores para mostrar
-    @Builder.Default
-    private List<UsuarioResumenDTO> coordinadores = new ArrayList<>();
+    // NUEVOS CAMPOS para múltiples zonas
+    private Integer totalZonas;
+    private Integer zonasActivas;
+    private Integer totalCoordinadoresZona;
+    private Integer totalCoordinadoresOperativos;
     
     // Lista de operarios para mostrar
     @Builder.Default
     private List<UsuarioResumenDTO> operarios = new ArrayList<>();
+    
+    // ELIMINADOS:
+    // - zonaUuid (ahora está en la lista de zonas)
+    // - planTarifaUuid (ahora cada zona tiene su plan)
+    // - coordinadorUuids (ahora cada zona tiene sus coordinadores)
+    // - coordinadores (ahora cada zona maneja sus coordinadores)
+    // - zonaNombre, planTarifaNombre, etc. (se obtienen de las zonas)
     
     // Validación personalizada
     @AssertTrue(message = "La fecha de fin debe ser posterior a la fecha de inicio")
@@ -80,6 +73,11 @@ public class ContratoDTO {
             return true;
         }
         return fechaFin.isAfter(fechaInicio);
+    }
+    
+    @AssertTrue(message = "El contrato debe tener al menos una zona")
+    private boolean tieneZonas() {
+        return zonas != null && !zonas.isEmpty();
     }
     
     // Método para limpiar espacios
@@ -104,6 +102,43 @@ public class ContratoDTO {
         }
         LocalDate hoy = LocalDate.now();
         return java.time.temporal.ChronoUnit.DAYS.between(hoy, fechaFin);
+    }
+    
+    // Métodos de utilidad para zonas
+    public void agregarZona(ContratoZonaDTO zona) {
+        if (zonas == null) {
+            zonas = new ArrayList<>();
+        }
+        zonas.add(zona);
+    }
+    
+    public void removerZona(UUID zonaUuid) {
+        if (zonas != null) {
+            zonas.removeIf(zona -> zona.getZonaUuid().equals(zonaUuid));
+        }
+    }
+    
+    public ContratoZonaDTO buscarZona(UUID zonaUuid) {
+        if (zonas == null) {
+            return null;
+        }
+        return zonas.stream()
+                .filter(zona -> zona.getZonaUuid().equals(zonaUuid))
+                .findFirst()
+                .orElse(null);
+    }
+    
+    public boolean tieneZona(UUID zonaUuid) {
+        return buscarZona(zonaUuid) != null;
+    }
+    
+    public int getCantidadZonasActivas() {
+        if (zonas == null) {
+            return 0;
+        }
+        return (int) zonas.stream()
+                .filter(ContratoZonaDTO::estaActivo)
+                .count();
     }
     
     private boolean puedeSerEliminado;
