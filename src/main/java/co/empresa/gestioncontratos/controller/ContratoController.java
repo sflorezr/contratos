@@ -1,4 +1,3 @@
-// ContratoController.java
 package co.empresa.gestioncontratos.controller;
 
 import lombok.RequiredArgsConstructor;
@@ -443,8 +442,7 @@ public class ContratoController {
                     contratos = new ArrayList<>();
             }
             
-
-           List<ContratoDTO> contratosDTO = contratos.stream()
+            List<ContratoDTO> contratosDTO = contratos.stream()
                 .map(contrato -> {
                     ContratoDTO dto = ContratoDTO.builder()
                         .uuid(contrato.getUuid())
@@ -452,11 +450,20 @@ public class ContratoController {
                         .objetivo(contrato.getObjetivo())
                         .fechaInicio(contrato.getFechaInicio())
                         .fechaFin(contrato.getFechaFin())
+                        .estado(contrato.getEstado())
+                        
+                        // CORREGIDO: Mapear zona correctamente
+                        .zonaUuid(contrato.getZona() != null ? contrato.getZona().getUuid() : null)
+                        .zonaNombre(contrato.getZona() != null ? contrato.getZona().getNombre() : null)
+                        
+                        // CORREGIDO: Mapear plan de tarifa correctamente  
                         .planTarifaUuid(contrato.getPlanTarifa() != null ? contrato.getPlanTarifa().getUuid() : null)
                         .planTarifaNombre(contrato.getNombrePlanTarifa())
-                        .supervisorId(contrato.getSupervisor() != null ? contrato.getSupervisor().getUuid() : null)
+                        
+                        // CORREGIDO: Mapear supervisor correctamente usando supervisorUuid
+                        .supervisorUuid(contrato.getSupervisor() != null ? contrato.getSupervisor().getUuid() : null)
                         .supervisorNombre(contrato.getNombreSupervisor())
-                        .estado(contrato.getEstado())
+                        
                         .build();
                     
                     // Agregar coordinadores
@@ -497,8 +504,8 @@ public class ContratoController {
                     dto.setTotalSectores(((Number) estadisticas.get("totalSectores")).intValue());
                     dto.setSectoresActivos(((Number) estadisticas.get("sectoresActivos")).intValue());
                     
-                    // Opcionalmente, cargar las zonas resumidas                   
                     // Verificar si puede ser eliminado
+                    dto.setPuedeSerEliminado(contrato.puedeSerEditado()); // o tu lógica específica
                     
                     return dto;
                 })
@@ -511,9 +518,7 @@ public class ContratoController {
             log.error("❌ Error al listar contratos: ", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
-    }
-    @PostMapping
-    @ResponseBody
+    }    
     public ResponseEntity<Map<String, Object>> crear(@Valid @RequestBody ContratoDTO contratoDTO,
                                                     @AuthenticationPrincipal Usuario usuarioActual) {
         log.info("=== CREANDO NUEVO CONTRATO ===");
@@ -551,7 +556,7 @@ public class ContratoController {
         }
     }
 
-    @PutMapping("/{uuid}")
+    @PutMapping("/api/{uuid}")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> actualizar(@PathVariable UUID uuid,
                                                         @Valid @RequestBody ContratoDTO contratoDTO,
@@ -563,7 +568,6 @@ public class ContratoController {
         Map<String, Object> response = new HashMap<>();
         
         try {
-                       
             Contrato contratoActualizado = contratoService.actualizar(uuid, contratoDTO);
             
             response.put("success", true);
@@ -585,6 +589,65 @@ public class ContratoController {
         }
     }
 
+    @GetMapping("/api/{uuid}")
+    @ResponseBody
+    public ResponseEntity<ContratoDTO> obtenerPorUuid(@PathVariable UUID uuid,
+                                                    @AuthenticationPrincipal Usuario usuarioActual) {
+        log.info("=== OBTENIENDO CONTRATO: {} ===", uuid);
+        log.info("Usuario: {} ({})", usuarioActual.getUsername(), usuarioActual.getPerfil());
+        
+        try {
+            Contrato contrato = contratoService.buscarPorUuid(uuid);
+            
+            // Verificar permisos
+            if (!tienePermisoVerContrato(usuarioActual, contrato)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+            
+            // Construir DTO con todos los datos necesarios para edición
+            ContratoDTO dto = ContratoDTO.builder()
+                .uuid(contrato.getUuid())
+                .codigo(contrato.getNumeroContrato())
+                .objetivo(contrato.getObjetivo())
+                .fechaInicio(contrato.getFechaInicio())
+                .fechaFin(contrato.getFechaFin())
+                .estado(contrato.getEstado())
+                
+                // IMPORTANTE: Incluir UUIDs para edición
+                .zonaUuid(contrato.getZona() != null ? contrato.getZona().getUuid() : null)
+                .zonaNombre(contrato.getZona() != null ? contrato.getZona().getNombre() : null)
+                
+                .planTarifaUuid(contrato.getPlanTarifa() != null ? contrato.getPlanTarifa().getUuid() : null)
+                .planTarifaNombre(contrato.getNombrePlanTarifa())
+                
+                .supervisorUuid(contrato.getSupervisor() != null ? contrato.getSupervisor().getUuid() : null)
+                .supervisorNombre(contrato.getNombreSupervisor())
+                
+                .build();
+            
+            // Agregar coordinadores si existen
+            if (contrato.getCoordinadores() != null && !contrato.getCoordinadores().isEmpty()) {
+                dto.setCoordinadorUuids(
+                    contrato.getCoordinadores().stream()
+                        .map(Usuario::getUuid)
+                        .collect(Collectors.toList())
+                );
+            }
+            
+            // Agregar estadísticas
+            Map<String, Object> estadisticas = contratoService.obtenerEstadisticas(contrato);
+            dto.setTotalPredios(((Number) estadisticas.get("totalPredios")).intValue());
+            dto.setPrediosAsignados(((Number) estadisticas.get("prediosAsignados")).intValue());
+            dto.setPuedeSerEliminado(contrato.puedeSerEditado());
+            
+            log.info("✅ Contrato encontrado: {}", contrato.getNumeroContrato());
+            return ResponseEntity.ok(dto);
+            
+        } catch (Exception e) {
+            log.error("❌ Error al obtener contrato: ", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
     @PatchMapping("/{uuid}/estado")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> cambiarEstado(@PathVariable UUID uuid,

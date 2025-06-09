@@ -34,10 +34,12 @@ public class ContratoDTO {
     @NotNull(message = "El plan de tarifa es requerido")
     private UUID planTarifaUuid;
 
+    // CORREGIDO: Cambiar a zonaUuid para ser consistente con el frontend
     @NotNull(message = "La zona es requerida")
-    private UUID zonaId;
+    private UUID zonaUuid;
     
-    private UUID supervisorId;
+    // CORREGIDO: Cambiar a supervisorUuid para ser consistente con el frontend
+    private UUID supervisorUuid;
     
     @Builder.Default
     private List<UUID> coordinadorUuids = new ArrayList<>();
@@ -56,7 +58,7 @@ public class ContratoDTO {
     private Double porcentajeAvance;
     private Integer cantidadCoordinadores;
     
-    // NUEVOS CAMPOS para zonas
+    // Campos para zonas
     private String zonaNombre;
     private Integer totalZonas;    
     private Integer totalSectores;
@@ -103,6 +105,7 @@ public class ContratoDTO {
         LocalDate hoy = LocalDate.now();
         return java.time.temporal.ChronoUnit.DAYS.between(hoy, fechaFin);
     }
+    
     private boolean puedeSerEliminado;
 
     public boolean isPuedeSerEliminado() {

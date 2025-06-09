@@ -25,7 +25,6 @@ public class ContratoService {
     private final UsuarioRepository usuarioRepository;
     private final PredioRepository predioRepository;
     private final ZonaRepository zonaRepository;
-    private final SectorRepository sectorRepository;
     private final PlanTarifaRepository planTarifaRepository;
     private final PredioOperarioRepository predioOperarioRepository;
 
@@ -102,7 +101,7 @@ public class ContratoService {
         Contrato contrato = Contrato.builder()
             .numeroContrato(contratoDTO.getCodigo())
             .objetivo(contratoDTO.getObjetivo())
-            .zona(zonaRepository.findByUuid(contratoDTO.getZonaId())
+            .zona(zonaRepository.findByUuid(contratoDTO.getZonaUuid())
                 .orElseThrow(() -> new RuntimeException("Zona no encontrada")))
             .fechaInicio(contratoDTO.getFechaInicio())
             .fechaFin(contratoDTO.getFechaFin())
@@ -134,9 +133,14 @@ public class ContratoService {
         contrato.setObjetivo(contratoDTO.getObjetivo());
         contrato.setFechaInicio(contratoDTO.getFechaInicio());
         contrato.setFechaFin(contratoDTO.getFechaFin());
+        if (contratoDTO.getSupervisorUuid() != null) {
+            contrato.setSupervisor(usuarioRepository.findByUuid(contratoDTO.getSupervisorUuid())
+                .orElseThrow(() -> new RuntimeException("Supervisor no encontrado")));
+        }
+                
         
-        if (contratoDTO.getZonaId() != null) {
-            contrato.setZona(zonaRepository.findByUuid(contratoDTO.getZonaId())
+        if (contratoDTO.getZonaUuid() != null) {
+            contrato.setZona(zonaRepository.findByUuid(contratoDTO.getZonaUuid())
                 .orElseThrow(() -> new RuntimeException("Zona no encontrada")));
         }
         

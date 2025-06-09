@@ -258,31 +258,39 @@ async function editarContrato(uuid) {
     document.getElementById('contratoUuid').value = uuid;
     document.getElementById('modalContratoTitle').textContent = 'Editar Contrato';
     
-    const contrato = contratos.find(c => c.uuid === uuid);
-    if (!contrato) {
-        showAlert('Contrato no encontrado', 'danger');
-        return;
+    try {
+        // CORREGIDO: Obtener datos completos del contrato desde el servidor
+        const response = await fetch(`/admin/contratos/api/${uuid}`);
+        if (!response.ok) {
+            throw new Error('Error al obtener datos del contrato');
+        }
+        
+        const contrato = await response.json();
+        console.log('Datos del contrato cargados:', contrato); // Para debug
+        
+        // CORREGIDO: Llenar el formulario con los campos correctos
+        document.getElementById('codigo').value = contrato.codigo || contrato.numeroContrato || '';
+        document.getElementById('objetivo').value = contrato.objetivo || '';
+        document.getElementById('zonaUuid').value = contrato.zonaUuid || '';           // Usar zonaUuid
+        document.getElementById('planTarifaUuid').value = contrato.planTarifaUuid || '';
+        document.getElementById('fechaInicio').value = contrato.fechaInicio || '';
+        document.getElementById('fechaFin').value = contrato.fechaFin || '';
+        document.getElementById('supervisorUuid').value = contrato.supervisorUuid || '';  // Usar supervisorUuid
+        document.getElementById('estado').value = contrato.estado || 'ACTIVO';
+        
+        // Mostrar sección de predios en modo edición
+        document.getElementById('prediosSection').classList.remove('d-none');
+        
+        // Cargar predios del contrato
+        await cargarPrediosContrato(uuid);
+        
+        modalContrato.show();
+        
+    } catch (error) {
+        console.error('Error al cargar contrato:', error);
+        showAlert('Error al cargar los datos del contrato', 'danger');
     }
-    
-    // Llenar el formulario
-    document.getElementById('codigo').value = contrato.numeroContrato || contrato.codigo;
-    document.getElementById('objetivo').value = contrato.objetivo;
-    document.getElementById('zonaUuid').value = contrato.zonaId || '';
-    document.getElementById('planTarifaUuid').value = contrato.planTarifaUuid || '';
-    document.getElementById('fechaInicio').value = contrato.fechaInicio;
-    document.getElementById('fechaFin').value = contrato.fechaFin;
-    document.getElementById('supervisorUuid').value = contrato.supervisorUuid || '';
-    document.getElementById('estado').value = contrato.estado;
-    
-    // Mostrar sección de predios en modo edición
-    document.getElementById('prediosSection').classList.remove('d-none');
-    
-    // Cargar predios del contrato
-    await cargarPrediosContrato(uuid);
-    
-    modalContrato.show();
 }
-
 async function cargarPrediosContrato(contratoUuid) {
     try {
         const response = await fetch(`/admin/contratos/${contratoUuid}/predios`);
@@ -339,17 +347,18 @@ async function saveContrato() {
     const formData = new FormData(form);
     const data = Object.fromEntries(formData);
 
-    
+    // CORREGIDO: Mapear correctamente los campos para que coincidan con el DTO
     const contratoData = {
         codigo: data.codigo,
         objetivo: data.objetivo,
-        zonaId: data.zonaUuid,           // Mapear zonaUuid -> zonaId
+        zonaUuid: data.zonaUuid,           // Cambiar zonaId -> zonaUuid
         planTarifaUuid: data.planTarifaUuid,
         fechaInicio: data.fechaInicio,
         fechaFin: data.fechaFin,
-        supervisorUuid: data.supervisorUuid && data.supervisorUuid !== '' ? data.supervisorUuid : null,
+        supervisorUuid: data.supervisorUuid && data.supervisorUuid !== '' ? data.supervisorUuid : null,  // Cambiar supervisorId -> supervisorUuid
         estado: data.estado || 'ACTIVO'
     };
+    
     // Validar fechas
     if (new Date(contratoData.fechaFin) <= new Date(contratoData.fechaInicio)) {
         showAlert('La fecha fin debe ser posterior a la fecha inicio', 'warning');
@@ -363,17 +372,19 @@ async function saveContrato() {
     
     try {
         const url = isEdit 
-            ? `/admin/contratos/${currentEditUuid}`
-            : '/admin/contratos';
+            ? `/admin/contratos/api/${currentEditUuid}`  // Agregar /api/ para consistencia
+            : '/admin/contratos/api/crear';              // Agregar /api/ para consistencia
             
         const method = isEdit ? 'PUT' : 'POST';
+        
+        console.log('Enviando datos:', contratoData); // Para debug
         
         const response = await fetch(url, {
             method: method,
             headers: {
                 'Content-Type': 'application/json'
             },            
-            body: JSON.stringify(contratoData)  // Usar el objeto mapeado
+            body: JSON.stringify(contratoData)
         });
         
         if (response.ok) {
