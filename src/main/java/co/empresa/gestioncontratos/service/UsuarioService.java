@@ -15,7 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.UUID;
-
+import java.util.stream.Collectors;
 import java.nio.file.*;
 
 @Service
@@ -384,4 +384,13 @@ public class UsuarioService {
         log.info("Buscando operarios activos");
         return usuarioRepository.findOperariosActivos();
     }
+
+    @Transactional(readOnly = true)
+    public List<UsuarioDTO> listarPorPerfil(PerfilUsuario perfil) {
+        List<Usuario> usuarios = usuarioRepository.findByPerfilAndActivoTrue(perfil);
+        return usuarios.stream()
+            .map(this::convertirADTO)
+            .collect(Collectors.toList());
+    }
+
 }

@@ -12,144 +12,12 @@
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
     
-    <style>
-        :root {
-            --primary: #667eea;
-            --secondary: #764ba2;
-            --success: #48bb78;
-            --warning: #ed8936;
-            --danger: #f56565;
-            --info: #4299e1;
-        }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f8f9fa;
-        }
-        
-        .sidebar-menu {
-            position: fixed;
-            left: 0;
-            top: 0;
-            width: 250px;
-            height: 100vh;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
-            z-index: 1000;
-            overflow-y: auto;
-        }
-        
-        .main-area {
-            margin-left: 250px;
-            min-height: 100vh;
-        }
-        
-        .header-section {
-            background: white;
-            padding: 30px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
-        }
-        
-        .assignment-card {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            margin-bottom: 20px;
-            overflow: hidden;
-        }
-        
-        .assignment-header {
-            padding: 20px;
-            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-            border-bottom: 1px solid #dee2e6;
-        }
-        
-        .assignment-body {
-            padding: 20px;
-        }
-        
-        .user-card {
-            border: 1px solid #e9ecef;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 10px;
-            transition: all 0.3s;
-        }
-        
-        .user-card:hover {
-            background-color: #f8f9fa;
-            border-color: var(--primary);
-        }
-        
-        .predio-card {
-            border: 1px solid #e9ecef;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 10px;
-            background-color: #f8f9fa;
-        }
-        
-        .predio-card.asignado {
-            border-color: var(--success);
-            background-color: #f0f9ff;
-        }
-        
-        .btn-gradient {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-weight: 500;
-        }
-        
-        .btn-gradient:hover {
-            color: white;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-        }
-        
-        .stats-badge {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-weight: 500;
-            display: inline-block;
-        }
-        
-        .assignment-progress {
-            background: #e9ecef;
-            border-radius: 10px;
-            height: 10px;
-            overflow: hidden;
-            margin: 10px 0;
-        }
-        
-        .assignment-progress-bar {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            height: 100%;
-            transition: width 0.6s ease;
-        }
-        
-        .role-badge {
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-        
-        .role-badge.supervisor { background-color: #fff3cd; color: #856404; }
-        .role-badge.coordinador { background-color: #d1ecf1; color: #0c5460; }
-        .role-badge.operario { background-color: #d4edda; color: #155724; }
-    </style>
+    <!-- CSS personalizado combinado -->
+    <link href="/css/asignaciones.css" rel="stylesheet">
 </head>
 <body>
-    <!-- Sidebar (mismo que el anterior) -->
-    <nav class="sidebar-menu">
-        <!-- ... mismo contenido del sidebar ... -->
-    </nav>
+    <!-- Sidebar (incluir el fragment de menú) -->
+    <div th:insert="fragments/menuPrincipal :: menu-principal"></div>
     
     <!-- Main Content -->
     <div class="main-area">
@@ -177,8 +45,8 @@
             <!-- Contract Info -->
             <div class="row g-3">
                 <div class="col-md-3">
-                    <small class="text-muted d-block">Sector</small>
-                    <strong id="contratoSector">--</strong>
+                    <small class="text-muted d-block">Zonas Configuradas</small>
+                    <strong id="totalZonas">--</strong>
                 </div>
                 <div class="col-md-3">
                     <small class="text-muted d-block">Periodo</small>
@@ -205,6 +73,15 @@
                 <div class="col-md-3">
                     <div class="text-center">
                         <div class="stats-badge mb-2">
+                            <i class="fas fa-layer-group me-1"></i>
+                            <span id="totalZonasStats">0</span>
+                        </div>
+                        <p class="text-muted mb-0">Zonas Activas</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="text-center">
+                        <div class="stats-badge mb-2">
                             <i class="fas fa-home me-1"></i>
                             <span id="totalPredios">0</span>
                         </div>
@@ -214,28 +91,19 @@
                 <div class="col-md-3">
                     <div class="text-center">
                         <div class="stats-badge mb-2">
-                            <i class="fas fa-check-circle me-1"></i>
-                            <span id="prediosAsignados">0</span>
+                            <i class="fas fa-users me-1"></i>
+                            <span id="totalCoordinadores">0</span>
                         </div>
-                        <p class="text-muted mb-0">Predios Asignados</p>
+                        <p class="text-muted mb-0">Coordinadores</p>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="text-center">
                         <div class="stats-badge mb-2">
-                            <i class="fas fa-users me-1"></i>
+                            <i class="fas fa-hard-hat me-1"></i>
                             <span id="totalOperarios">0</span>
                         </div>
                         <p class="text-muted mb-0">Operarios</p>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="text-center">
-                        <div class="stats-badge mb-2">
-                            <i class="fas fa-tasks me-1"></i>
-                            <span id="totalActividades">0</span>
-                        </div>
-                        <p class="text-muted mb-0">Actividades</p>
                     </div>
                 </div>
             </div>
@@ -244,7 +112,7 @@
             <div class="assignment-card" id="supervisorCard">
                 <div class="assignment-header">
                     <h5 class="mb-0">
-                        <i class="fas fa-user-tie me-2"></i>Supervisor
+                        <i class="fas fa-user-tie me-2"></i>Supervisor del Contrato
                     </h5>
                 </div>
                 <div class="assignment-body">
@@ -258,27 +126,32 @@
                 </div>
             </div>
             
-            <!-- Coordinators Assignment -->
+            <!-- Zones Management -->
             <div class="assignment-card">
                 <div class="assignment-header">
                     <div class="d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">
-                            <i class="fas fa-users me-2"></i>Coordinadores
+                            <i class="fas fa-layer-group me-2"></i>Gestión por Zonas
                         </h5>
-                        <button class="btn btn-sm btn-gradient" onclick="abrirModalCoordinador()"
-                                id="btnAsignarCoordinador">
-                            <i class="fas fa-plus me-1"></i>Agregar Coordinador
-                        </button>
+                        <div>
+                            <button class="btn btn-sm btn-outline-info me-2" onclick="verEstadisticasZonas()">
+                                <i class="fas fa-chart-bar me-1"></i>Estadísticas
+                            </button>
+                            <button class="btn btn-sm btn-gradient" onclick="abrirModalAgregarZona()"
+                                    id="btnAgregarZona">
+                                <i class="fas fa-plus me-1"></i>Agregar Zona
+                            </button>
+                        </div>
                     </div>
                 </div>
                 <div class="assignment-body">
-                    <div id="coordinadoresList">
-                        <p class="text-muted">No hay coordinadores asignados</p>
+                    <div id="zonasContrato">
+                        <p class="text-muted">Cargando zonas del contrato...</p>
                     </div>
                 </div>
             </div>
             
-            <!-- Operators Assignment -->
+            <!-- Operators and Properties Assignment -->
             <div class="assignment-card">
                 <div class="assignment-header">
                     <div class="d-flex justify-content-between align-items-center">
@@ -348,28 +221,105 @@
         </div>
     </div>
     
-    <!-- Modal Agregar Coordinador -->
-    <div class="modal fade" id="modalCoordinador" tabindex="-1">
-        <div class="modal-dialog">
+    <!-- Modal Agregar/Editar Zona -->
+    <div class="modal fade" id="modalZona" tabindex="-1">
+        <div class="modal-dialog modal-lg">
             <div class="modal-content">
-                <div class="modal-header bg-info text-white">
+                <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title">
-                        <i class="fas fa-user me-2"></i>Agregar Coordinador
+                        <i class="fas fa-layer-group me-2"></i>
+                        <span id="modalZonaTitle">Agregar Zona al Contrato</span>
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
+                    <form id="zonaForm">
+                        <input type="hidden" id="zonaUuidHidden">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Zona <span class="text-danger">*</span></label>
+                                <select class="form-select" id="selectZona" required>
+                                    <option value="">Seleccionar zona...</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Plan de Tarifa <span class="text-danger">*</span></label>
+                                <select class="form-select" id="selectPlanTarifa" required>
+                                    <option value="">Seleccionar plan...</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Coordinador de Zona</label>
+                                <select class="form-select" id="selectCoordinadorZona">
+                                    <option value="">Sin asignar</option>
+                                </select>
+                                <div class="form-text">Responsable de la gestión estratégica de la zona</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Coordinador Operativo</label>
+                                <select class="form-select" id="selectCoordinadorOperativo">
+                                    <option value="">Sin asignar</option>
+                                </select>
+                                <div class="form-text">Responsable de las operaciones diarias en la zona</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Estado</label>
+                                <select class="form-select" id="selectEstadoZona">
+                                    <option value="ACTIVO">Activo</option>
+                                    <option value="EN_PROCESO">En Proceso</option>
+                                    <option value="COMPLETADO">Completado</option>
+                                    <option value="SUSPENDIDO">Suspendido</option>
+                                </select>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="guardarZona()">
+                        <i class="fas fa-save me-1"></i>
+                        <span id="btnGuardarZonaText">Agregar</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal Asignar Coordinador a Zona -->
+    <div class="modal fade" id="modalCoordinadorZona" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-user me-2"></i>
+                        <span id="modalCoordinadorTitle">Asignar Coordinador</span>
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Zona</label>
+                        <input type="text" class="form-control" id="zonaSeleccionada" readonly>
+                        <input type="hidden" id="zonaUuidCoordinador">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tipo de Coordinador</label>
+                        <select class="form-select" id="tipoCoordinador">
+                            <option value="zona">Coordinador de Zona</option>
+                            <option value="operativo">Coordinador Operativo</option>
+                        </select>
+                    </div>
                     <div class="form-group">
                         <label class="form-label">Seleccionar Coordinador</label>
-                        <select class="form-select" id="selectCoordinador" style="width: 100%;">
+                        <select class="form-select" id="selectCoordinadorModal" style="width: 100%;">
                             <option value="">Seleccione un coordinador...</option>
                         </select>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-info text-white" onclick="agregarCoordinador()">
-                        <i class="fas fa-plus me-1"></i>Agregar
+                    <button type="button" class="btn btn-info text-white" onclick="asignarCoordinadorAZona()">
+                        <i class="fas fa-plus me-1"></i>Asignar
                     </button>
                 </div>
             </div>
@@ -458,378 +408,7 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     
-    <script>
-        // Variables globales
-        let contratoUuid = null;
-        let contrato = null;
-        let usuarioActual = null;
-        let supervisoresDisponibles = [];
-        let coordinadoresDisponibles = [];
-        let operariosDisponibles = [];
-        let prediosContrato = [];
-        
-        // Inicialización
-        document.addEventListener('DOMContentLoaded', function() {
-            // Obtener UUID del contrato de la URL
-            const urlParts = window.location.pathname.split('/');
-            contratoUuid = urlParts[urlParts.indexOf('contratos') + 1];
-            
-            inicializarSelectores();
-            cargarDatosContrato();
-            configurarEventListeners();
-        });
-        
-        // Inicializar Select2
-        function inicializarSelectores() {
-            $('#selectSupervisor').select2({
-                theme: 'bootstrap-5',
-                placeholder: 'Buscar supervisor...',
-                allowClear: true
-            });
-            
-            $('#selectCoordinador').select2({
-                theme: 'bootstrap-5',
-                placeholder: 'Buscar coordinador...',
-                allowClear: true
-            });
-            
-            $('#selectOperario').select2({
-                theme: 'bootstrap-5',
-                placeholder: 'Buscar operario...',
-                allowClear: true
-            });
-        }
-        
-        // Configurar event listeners
-        function configurarEventListeners() {
-            document.getElementById('buscarPredio').addEventListener('input', filtrarPredios);
-        }
-        
-        // Cargar datos del contrato
-        async function cargarDatosContrato() {
-            try {
-                // Cargar información del contrato
-                const response = await fetch(`/admin/contratos/${contratoUuid}/resumen-asignaciones`);
-                if (!response.ok) throw new Error('Error al cargar contrato');
-                
-                const data = await response.json();
-                actualizarVistaContrato(data);
-                
-                // Cargar listas según permisos
-                await cargarListasSegunPermisos();
-                
-            } catch (error) {
-                console.error('Error:', error);
-                mostrarAlerta('Error al cargar los datos del contrato', 'danger');
-            }
-        }
-        
-        // Actualizar vista con datos del contrato
-        function actualizarVistaContrato(data) {
-            // Información del encabezado
-            document.getElementById('contratoCodigo').textContent = data.codigo || 'CONT-000';
-            document.getElementById('contratoObjetivo').textContent = data.objetivo || '';
-            document.getElementById('contratoSector').textContent = data.sectorNombre || '--';
-            document.getElementById('contratoPeriodo').textContent = 
-                `${formatearFecha(data.fechaInicio)} - ${formatearFecha(data.fechaFin)}`;
-            document.getElementById('contratoEstado').textContent = formatearEstado(data.estado);
-            
-            // Estadísticas
-            document.getElementById('totalPredios').textContent = data.totalPredios || 0;
-            document.getElementById('prediosAsignados').textContent = data.prediosAsignados || 0;
-            document.getElementById('totalOperarios').textContent = data.totalOperarios || 0;
-            document.getElementById('totalActividades').textContent = data.totalActividades || 0;
-            
-            // Progreso
-            const porcentaje = data.totalPredios > 0 
-                ? Math.round((data.prediosAsignados / data.totalPredios) * 100) 
-                : 0;
-            document.getElementById('progresoGeneral').style.width = porcentaje + '%';
-            document.getElementById('porcentajeProgreso').textContent = porcentaje;
-            
-            // Supervisor
-            if (data.supervisor) {
-                actualizarSupervisor(data.supervisor);
-            }
-            
-            // Coordinadores
-            if (data.coordinadores && data.coordinadores.length > 0) {
-                actualizarCoordinadores(data.coordinadores);
-            }
-            
-            // Operarios y predios
-            if (data.operarios && data.operarios.length > 0) {
-                actualizarOperariosAsignados(data.operarios);
-            }
-        }
-        
-        // Actualizar vista del supervisor
-        function actualizarSupervisor(supervisor) {
-            const container = document.getElementById('supervisorInfo');
-            container.innerHTML = `
-                <div class="user-card">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="mb-1">${supervisor.nombre}</h6>
-                            <span class="role-badge supervisor">Supervisor</span>
-                        </div>
-                        ${puedeEditarSupervisor() ? `
-                            <button class="btn btn-sm btn-outline-danger" 
-                                    onclick="removerSupervisor()">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        ` : ''}
-                    </div>
-                </div>
-            `;
-            
-            // Ocultar botón de asignar si ya hay supervisor
-            document.getElementById('btnAsignarSupervisor').style.display = 'none';
-        }
-        
-        // Actualizar lista de coordinadores
-        function actualizarCoordinadores(coordinadores) {
-            const container = document.getElementById('coordinadoresList');
-            
-            if (coordinadores.length === 0) {
-                container.innerHTML = '<p class="text-muted">No hay coordinadores asignados</p>';
-                return;
-            }
-            
-            container.innerHTML = coordinadores.map(coord => `
-                <div class="user-card">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="mb-1">${coord.nombre}</h6>
-                            <span class="role-badge coordinador">Coordinador</span>
-                        </div>
-                        ${puedeEditarCoordinadores() ? `
-                            <button class="btn btn-sm btn-outline-danger" 
-                                    onclick="removerCoordinador('${coord.uuid}')">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        ` : ''}
-                    </div>
-                </div>
-            `).join('');
-        }
-        
-        // Cargar operarios disponibles
-        async function cargarOperariosDisponibles() {
-            try {
-                const response = await fetch(`/admin/contratos/${contratoUuid}/operarios-disponibles`);
-                if (!response.ok) throw new Error('Error al cargar operarios');
-                
-                const data = await response.json();
-                operariosDisponibles = data.operarios || [];
-                
-                renderizarOperariosDisponibles();
-                llenarSelectOperarios();
-                
-            } catch (error) {
-                console.error('Error:', error);
-            }
-        }
-        
-        // Renderizar operarios disponibles
-        function renderizarOperariosDisponibles() {
-            const container = document.getElementById('operariosDisponiblesList');
-            
-            if (operariosDisponibles.length === 0) {
-                container.innerHTML = '<p class="text-muted">No hay operarios disponibles</p>';
-                return;
-            }
-            
-            container.innerHTML = operariosDisponibles.map(op => `
-                <div class="user-card" draggable="true" ondragstart="dragOperario(event, '${op.uuid}')">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="mb-1">${op.nombre}</h6>
-                            <small class="text-muted">
-                                <i class="fas fa-home me-1"></i>
-                                ${op.prediosAsignados || 0} predios asignados
-                            </small>
-                        </div>
-                        <span class="role-badge operario">Operario</span>
-                    </div>
-                </div>
-            `).join('');
-        }
-        
-        // Cargar predios del contrato
-        async function cargarPrediosContrato() {
-            try {
-                const response = await fetch(`/admin/contratos/${contratoUuid}/predios`);
-                if (!response.ok) throw new Error('Error al cargar predios');
-                
-                prediosContrato = await response.json();
-                renderizarPredios();
-                
-            } catch (error) {
-                console.error('Error:', error);
-            }
-        }
-        
-        // Renderizar predios
-        function renderizarPredios() {
-            const container = document.getElementById('prediosList');
-            
-            if (prediosContrato.length === 0) {
-                container.innerHTML = '<p class="text-muted">No hay predios en este contrato</p>';
-                return;
-            }
-            
-            container.innerHTML = prediosContrato.map(predio => {
-                const asignado = predio.operario != null;
-                return `
-                    <div class="predio-card ${asignado ? 'asignado' : ''}" 
-                         ondrop="dropOperario(event, '${predio.uuid}')" 
-                         ondragover="allowDrop(event)">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div class="flex-grow-1">
-                                <h6 class="mb-1">${predio.direccion}</h6>
-                                <small class="text-muted">
-                                    <i class="fas fa-map-marker-alt me-1"></i>
-                                    ${predio.tipo} - ${predio.codigoCatastral || 'Sin código'}
-                                </small>
-                                ${asignado ? `
-                                    <div class="mt-2">
-                                        <span class="badge bg-success">
-                                            <i class="fas fa-user-check me-1"></i>
-                                            ${predio.operario.nombre}
-                                        </span>
-                                    </div>
-                                ` : `
-                                    <div class="mt-2">
-                                        <span class="badge bg-secondary">
-                                            <i class="fas fa-user-slash me-1"></i>
-                                            Sin asignar
-                                        </span>
-                                    </div>
-                                `}
-                            </div>
-                            <div>
-                                ${asignado && puedeEditarOperarios() ? `
-                                    <button class="btn btn-sm btn-outline-warning me-1" 
-                                            onclick="cambiarOperario('${predio.uuid}', '${predio.direccion}')">
-                                        <i class="fas fa-exchange-alt"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-danger" 
-                                            onclick="removerOperarioDePredio('${predio.uuid}')">
-                                        <i class="fas fa-times"></i>
-                                    </button>
-                                ` : ''}
-                                ${!asignado && puedeEditarOperarios() ? `
-                                    <button class="btn btn-sm btn-outline-success" 
-                                            onclick="abrirModalAsignarOperario('${predio.uuid}', '${predio.direccion}')">
-                                        <i class="fas fa-user-plus"></i>
-                                    </button>
-                                ` : ''}
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-        
-        // Funciones de drag & drop
-        function dragOperario(event, operarioUuid) {
-            event.dataTransfer.setData("operarioUuid", operarioUuid);
-        }
-        
-        function allowDrop(event) {
-            event.preventDefault();
-        }
-        
-        async function dropOperario(event, predioUuid) {
-            event.preventDefault();
-            const operarioUuid = event.dataTransfer.getData("operarioUuid");
-            
-            if (!puedeEditarOperarios()) {
-                mostrarAlerta('No tiene permisos para asignar operarios', 'warning');
-                return;
-            }
-            
-            await asignarOperario(predioUuid, operarioUuid);
-        }
-        
-        // Asignar operario a predio
-        async function asignarOperario(predioUuid, operarioUuid) {
-            try {
-                const response = await fetch(
-                    `/admin/contratos/${contratoUuid}/predios/${predioUuid}/asignar-operario`,
-                    {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                        body: `operarioUuid=${operarioUuid}`
-                    }
-                );
-                
-                if (!response.ok) throw new Error('Error al asignar operario');
-                
-                const result = await response.json();
-                mostrarAlerta(result.message, 'success');
-                
-                // Recargar datos
-                await cargarDatosContrato();
-                await cargarPrediosContrato();
-                
-            } catch (error) {
-                console.error('Error:', error);
-                mostrarAlerta('Error al asignar operario', 'danger');
-            }
-        }
-        
-        // Funciones de permisos
-        function puedeEditarSupervisor() {
-            return usuarioActual && usuarioActual.perfil === 'ADMINISTRADOR';
-        }
-        
-        function puedeEditarCoordinadores() {
-            return usuarioActual && (
-                usuarioActual.perfil === 'ADMINISTRADOR' ||
-                (usuarioActual.perfil === 'SUPERVISOR' && 
-                 contrato.supervisor && contrato.supervisor.uuid === usuarioActual.uuid)
-            );
-        }
-        
-        function puedeEditarOperarios() {
-            return usuarioActual && (
-                usuarioActual.perfil === 'ADMINISTRADOR' ||
-                usuarioActual.perfil === 'SUPERVISOR' ||
-                usuarioActual.perfil === 'COORDINADOR'
-            );
-        }
-        
-        // Utilidades
-        function formatearFecha(fecha) {
-            return new Date(fecha).toLocaleDateString('es-CO');
-        }
-        
-        function formatearEstado(estado) {
-            const estados = {
-                'ACTIVO': 'Activo',
-                'EN_PROCESO': 'En Proceso',
-                'COMPLETADO': 'Completado',
-                'CANCELADO': 'Cancelado'
-            };
-            return estados[estado] || estado;
-        }
-        
-        function mostrarAlerta(mensaje, tipo) {
-            // Implementar sistema de alertas
-            console.log(`${tipo}: ${mensaje}`);
-        }
-        
-        function filtrarPredios() {
-            const filtro = document.getElementById('buscarPredio').value.toLowerCase();
-            const predios = document.querySelectorAll('.predio-card');
-            
-            predios.forEach(predio => {
-                const texto = predio.textContent.toLowerCase();
-                predio.style.display = texto.includes(filtro) ? 'block' : 'none';
-            });
-        }
-    </script>
+    <!-- JavaScript personalizado -->
+    <script src="/js/asignaciones.js"></script>
 </body>
 </html>

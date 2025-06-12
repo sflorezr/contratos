@@ -1,0 +1,236 @@
+/* ============== VARIABLES GLOBALES ============== */
+:root {
+    --primary: #667eea;
+    --secondary: #764ba2;
+    --success: #48bb78;
+    --warning: #ed8936;
+    --danger: #f56565;
+    --info: #4299e1;
+    --sidebar-width: 250px;
+}
+
+/* ============== ESTILOS BASE ============== */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+}
+
+/* ============== LAYOUT PRINCIPAL ============== */
+.sidebar-menu {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: var(--sidebar-width);
+    height: 100vh;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    color: white;
+    z-index: 1000;
+    overflow-y: auto;
+}
+
+.main-area {
+    margin-left: var(--sidebar-width);
+    min-height: 100vh;
+}
+
+.header-section {
+    background: white;
+    padding: 30px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: 30px;
+}
+
+/* ============== COMPONENTES ============== */
+.assignment-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    margin-bottom: 20px;
+    overflow: hidden;
+}
+
+.assignment-header {
+    padding: 20px;
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    border-bottom: 1px solid #dee2e6;
+}
+
+.assignment-body {
+    padding: 20px;
+}
+
+.zona-card {
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    background: linear-gradient(135deg, #f8f9fa, #ffffff);
+    transition: all 0.3s;
+}
+
+.zona-card:hover {
+    background: linear-gradient(135deg, #e9ecef, #f8f9fa);
+    border-color: var(--primary);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.zona-card.active {
+    border-color: var(--primary);
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+}
+
+.user-card {
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 10px;
+    transition: all 0.3s;
+}
+
+.user-card:hover {
+    background-color: #f8f9fa;
+    border-color: var(--primary);
+}
+
+.predio-card {
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 10px;
+    background-color: #f8f9fa;
+}
+
+.predio-card.asignado {
+    border-color: var(--success);
+    background-color: #f0f9ff;
+}
+
+.btn-gradient {
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: 500;
+}
+
+.btn-gradient:hover {
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.stats-badge {
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 500;
+    display: inline-block;
+}
+
+.assignment-progress {
+    background: #e9ecef;
+    border-radius: 10px;
+    height: 10px;
+    overflow: hidden;
+    margin: 10px 0;
+}
+
+.assignment-progress-bar {
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    height: 100%;
+    transition: width 0.6s ease;
+}
+
+.role-badge {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.role-badge.supervisor { background-color: #fff3cd; color: #856404; }
+.role-badge.coordinador-zona { background-color: #d1ecf1; color: #0c5460; }
+.role-badge.coordinador-operativo { background-color: #d4edda; color: #155724; }
+.role-badge.operario { background-color: #e2e3e5; color: #383d41; }
+
+.coordinador-type {
+    font-size: 10px;
+    opacity: 0.8;
+    display: block;
+    margin-top: 2px;
+}
+
+.zona-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.zona-info {
+    flex-grow: 1;
+}
+
+.zona-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.coordinador-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 5px 0;
+}
+
+.coordinador-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--info), var(--primary));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 12px;
+}
+
+.empty-coordinador {
+    color: #6c757d;
+    font-style: italic;
+    font-size: 14px;
+}
+
+/* ============== RESPONSIVE ============== */
+@media (max-width: 768px) {
+    .sidebar-menu {
+        transform: translateX(-100%);
+    }
+    
+    .main-area {
+        margin-left: 0;
+    }
+    
+    .header-section {
+        padding: 15px;
+    }
+    
+    .assignment-header,
+    .assignment-body {
+        padding: 15px;
+    }
+    
+    .zona-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .zona-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+}

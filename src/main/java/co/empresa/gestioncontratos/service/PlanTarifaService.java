@@ -2,8 +2,7 @@ package co.empresa.gestioncontratos.service;
 
 import co.empresa.gestioncontratos.dto.PlanTarifaDTO;
 import co.empresa.gestioncontratos.entity.PlanTarifa;
-import co.empresa.gestioncontratos.enums.EstadoContrato;
-import co.empresa.gestioncontratos.repository.ContratoRepository;
+import co.empresa.gestioncontratos.repository.ContratoZonaRepository;
 import co.empresa.gestioncontratos.repository.PlanTarifaRepository;
 import co.empresa.gestioncontratos.repository.TarifaRepository;
 import lombok.RequiredArgsConstructor;
@@ -14,7 +13,6 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.persistence.criteria.Predicate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,9 +28,9 @@ public class PlanTarifaService {
 
     private final PlanTarifaRepository planTarifaRepository;
     private final TarifaRepository tarifaRepository;
-    private final ContratoRepository contratoRepository;
+    private final ContratoZonaRepository contratoZonaRepository;
 
-    // ==================== CONSULTAS ====================
+    // ==================== CONSULTAS BÁSICAS ====================
 
     @Transactional(readOnly = true)
     public List<PlanTarifa> listarTodos() {
@@ -44,6 +42,12 @@ public class PlanTarifaService {
     public List<PlanTarifa> listarActivos() {
         log.info("Listando planes de tarifa activos");
         return planTarifaRepository.findByActivoTrueOrderByNombreAsc();
+    }
+
+    @Transactional(readOnly = true)
+    public List<PlanTarifaDTO> listarActivosDTO() {
+        log.info("Listando planes de tarifa activos");
+        return planTarifaRepository.findByAllDTO();
     }
 
     @Transactional(readOnly = true)
@@ -132,9 +136,9 @@ public class PlanTarifaService {
         
         // Si se va a desactivar, verificar que no tenga contratos activos
         if (planTarifa.getActivo()) {
-            long contratosActivos = planTarifaRepository.countContratosActivosByPlanTarifa(uuid);
-            if (contratosActivos > 0) {
-                throw new RuntimeException("No se puede desactivar el plan porque tiene " + contratosActivos + " contratos activos");
+            if (!planTarifaRepository.puedeSerDesactivado(uuid)) {
+                long zonasActivas = planTarifaRepository.countZonasActivasByPlanTarifa(uuid);
+                throw new RuntimeException("No se puede desactivar el plan porque tiene " + zonasActivas + " zonas de contratos activas");
             }
         }
         
@@ -147,14 +151,9 @@ public class PlanTarifaService {
         
         PlanTarifa planTarifa = buscarPorUuid(uuid);
         
-        // Verificar que no tenga tarifas asociadas
-        if (planTarifa.getTarifas() != null && !planTarifa.getTarifas().isEmpty()) {
-            throw new RuntimeException("No se puede eliminar el plan porque tiene tarifas asociadas");
-        }
-        
-        // Verificar que no tenga contratos asociados
-        if (planTarifa.getContratos() != null && !planTarifa.getContratos().isEmpty()) {
-            throw new RuntimeException("No se puede eliminar el plan porque tiene contratos asociados");
+        // Verificar que puede ser eliminado
+        if (!planTarifaRepository.puedeSerEliminado(uuid)) {
+            throw new RuntimeException("No se puede eliminar el plan porque tiene tarifas o zonas de contratos asociadas");
         }
         
         planTarifaRepository.delete(planTarifa);
@@ -172,20 +171,33 @@ public class PlanTarifaService {
         long planesActivos = planTarifaRepository.countByActivo(true);
         long planesInactivos = totalPlanes - planesActivos;
         long totalTarifas = tarifaRepository.count();
+        long totalZonasContratos = contratoZonaRepository.count();
         
         resumen.put("totalPlanes", totalPlanes);
         resumen.put("totalTarifas", totalTarifas);
+        resumen.put("totalZonasContratos", totalZonasContratos);
         resumen.put("planesActivos", planesActivos);
         resumen.put("planesInactivos", planesInactivos);
         
         // Planes con más tarifas
         List<Object[]> planesConTarifas = planTarifaRepository.findPlanesConMasTarifas();
         Map<String, Long> distribucionTarifas = planesConTarifas.stream()
+            .limit(5) // Top 5
             .collect(Collectors.toMap(
                 obj -> (String) obj[0], // nombre del plan
                 obj -> (Long) obj[1]    // cantidad de tarifas
             ));
         resumen.put("planesPorTarifas", distribucionTarifas);
+        
+        // Planes con más contratos-zonas
+        List<Object[]> planesConZonas = planTarifaRepository.findPlanesConMasContratosZonas();
+        Map<String, Long> distribucionZonas = planesConZonas.stream()
+            .limit(5) // Top 5
+            .collect(Collectors.toMap(
+                obj -> (String) obj[0], // nombre del plan
+                obj -> (Long) obj[1]    // cantidad de zonas
+            ));
+        resumen.put("planesPorZonas", distribucionZonas);
         
         return resumen;
     }
@@ -198,10 +210,22 @@ public class PlanTarifaService {
         
         Map<String, Object> detalle = new HashMap<>();
         detalle.put("plan", convertirADTO(planTarifa));
-        detalle.put("totalTarifas", planTarifa.getTarifas() != null ? planTarifa.getTarifas().size() : 0);
-        detalle.put("tarifasActivas", planTarifa.getTarifas() != null ? 
-            planTarifa.getTarifas().stream().filter(t -> t.getActivo()).count() : 0);
-        detalle.put("totalContratos", planTarifa.getContratos() != null ? planTarifa.getContratos().size() : 0);
+        
+        // Estadísticas de tarifas
+        detalle.put("totalTarifas", planTarifa.getCantidadTarifas());
+        detalle.put("tarifasActivas", planTarifa.getCantidadTarifasActivas());
+        
+        // Estadísticas de contratos-zonas
+        detalle.put("totalZonasContratos", planTarifa.getCantidadContratosZonas());
+        detalle.put("zonasActivasContratos", planTarifa.getCantidadContratosZonasActivas());
+        
+        // Información de contratos únicos que usan este plan
+        long contratosUnicos = planTarifaRepository.countContratosActivosByPlanTarifa(uuid);
+        detalle.put("contratosUnicos", contratosUnicos);
+        
+        // Verificaciones de estado
+        detalle.put("puedeSerEliminado", planTarifaRepository.puedeSerEliminado(uuid));
+        detalle.put("puedeSerDesactivado", planTarifaRepository.puedeSerDesactivado(uuid));
         
         return detalle;
     }
@@ -218,7 +242,59 @@ public class PlanTarifaService {
         return planTarifaRepository.findPlanesSinTarifas();
     }
 
-    // ==================== UTILIDADES ====================
+    @Transactional(readOnly = true)
+    public List<PlanTarifa> buscarPlanesConContratosZonas() {
+        log.info("Buscando planes que tienen contratos-zonas asociadas");
+        return planTarifaRepository.findPlanesConContratosZonas();
+    }
+
+    @Transactional(readOnly = true)
+    public List<PlanTarifa> buscarPlanesSinContratosZonas() {
+        log.info("Buscando planes que no tienen contratos-zonas asociadas");
+        return planTarifaRepository.findPlanesSinContratosZonas();
+    }
+
+    @Transactional(readOnly = true)
+    public List<PlanTarifa> buscarPlanesActivosCompletos() {
+        log.info("Buscando planes activos con tarifas y contratos-zonas");
+        return planTarifaRepository.findPlanesActivosCompletos();
+    }
+
+    @Transactional(readOnly = true)
+    public List<Object[]> obtenerPlanesMasUtilizados() {
+        log.info("Obteniendo planes más utilizados por cantidad de zonas");
+        return planTarifaRepository.findPlanesMasUtilizados();
+    }
+
+    @Transactional(readOnly = true)
+    public List<Object[]> obtenerEstadisticasCompletas() {
+        log.info("Obteniendo estadísticas completas de todos los planes");
+        return planTarifaRepository.findPlanesConEstadisticas();
+    }
+
+    // ==================== VALIDACIONES ====================
+
+    @Transactional(readOnly = true)
+    public boolean puedeSerEliminado(UUID uuid) {
+        return planTarifaRepository.puedeSerEliminado(uuid);
+    }
+
+    @Transactional(readOnly = true)
+    public boolean puedeSerDesactivado(UUID uuid) {
+        return planTarifaRepository.puedeSerDesactivado(uuid);
+    }
+
+    @Transactional(readOnly = true)
+    public long contarContratosActivos(UUID uuid) {
+        return planTarifaRepository.countContratosActivosByPlanTarifa(uuid);
+    }
+
+    @Transactional(readOnly = true)
+    public long contarZonasActivas(UUID uuid) {
+        return planTarifaRepository.countZonasActivasByPlanTarifa(uuid);
+    }
+
+    // ==================== UTILIDADES Y CONVERSIONES ====================
 
     public PlanTarifaDTO convertirADTO(PlanTarifa planTarifa) {
         return PlanTarifaDTO.builder()
@@ -227,9 +303,26 @@ public class PlanTarifaService {
             .descripcion(planTarifa.getDescripcion())
             .activo(planTarifa.getActivo())
             .fechaCreacion(planTarifa.getFechaCreacion())
-            .totalTarifas(planTarifa.getTarifas() != null ? planTarifa.getTarifas().size() : 0)
-            .totalContratos(planTarifa.getContratos() != null ? planTarifa.getContratos().size() : 0)
+            .totalTarifas(planTarifa.getCantidadTarifas())
+            .totalContratos(planTarifa.getCantidadContratosZonas())
             .build();
+    }
+
+    public PlanTarifaDTO convertirADTOConEstadisticas(PlanTarifa planTarifa) {
+        PlanTarifaDTO dto = convertirADTO(planTarifa);
+        
+        // Agregar estadísticas detalladas
+        dto.setTotalTarifas(planTarifa.getCantidadTarifas());
+        dto.setTarifasActivas((int) planTarifa.getCantidadTarifasActivas());
+        dto.setTotalContratos(planTarifa.getCantidadContratosZonas());
+        dto.setContratosActivos((int) planTarifa.getCantidadContratosZonasActivas());
+        
+        // Indicadores de estado
+        dto.setPuedeSerEliminado(puedeSerEliminado(planTarifa.getUuid()));
+        dto.setPuedeSerDesactivado(puedeSerDesactivado(planTarifa.getUuid()));
+        dto.setTieneUsoActivo(planTarifa.getCantidadContratosZonasActivas() > 0);
+        
+        return dto;
     }
 
     public List<PlanTarifaDTO> convertirADTOs(List<PlanTarifa> planes) {
@@ -237,15 +330,238 @@ public class PlanTarifaService {
             .map(this::convertirADTO)
             .collect(Collectors.toList());
     }
-    public PlanTarifaDTO convertirADTOConEstadisticas(PlanTarifa planTarifa) {
-        PlanTarifaDTO dto = convertirADTO(planTarifa);
+
+    public List<PlanTarifaDTO> convertirADTOsConEstadisticas(List<PlanTarifa> planes) {
+        return planes.stream()
+            .map(this::convertirADTOConEstadisticas)
+            .collect(Collectors.toList());
+    }
+
+    // ==================== BÚSQUEDA Y FILTRADO ====================
+
+    @Transactional(readOnly = true)
+    public List<PlanTarifa> buscarPorNombreParcial(String nombre) {
+        log.info("Buscando planes por nombre parcial: {}", nombre);
+        return planTarifaRepository.buscarPorNombreParcial(nombre);
+    }
+
+    @Transactional(readOnly = true)
+    public List<PlanTarifa> buscarActivosParaSeleccion() {
+        log.info("Obteniendo planes activos para selección en formularios");
+        return planTarifaRepository.findByActivoTrueOrderByNombreAsc();
+    }
+
+    // ==================== VALIDACIONES DE NEGOCIO ====================
+
+    public void validarParaEliminacion(UUID uuid) {
+        if (!puedeSerEliminado(uuid)) {
+            PlanTarifa plan = buscarPorUuid(uuid);
+            StringBuilder mensaje = new StringBuilder("No se puede eliminar el plan '")
+                .append(plan.getNombre()).append("' porque tiene:");
+            
+            if (plan.tieneTarifas()) {
+                mensaje.append("\n- ").append(plan.getCantidadTarifas()).append(" tarifas asociadas");
+            }
+            
+            if (plan.tieneContratosZonas()) {
+                mensaje.append("\n- ").append(plan.getCantidadContratosZonas()).append(" zonas de contratos asociadas");
+            }
+            
+            throw new RuntimeException(mensaje.toString());
+        }
+    }
+
+    public void validarParaDesactivacion(UUID uuid) {
+        if (!puedeSerDesactivado(uuid)) {
+            long zonasActivas = contarZonasActivas(uuid);
+            long contratosActivos = contarContratosActivos(uuid);
+            
+            throw new RuntimeException(String.format(
+                "No se puede desactivar el plan porque tiene %d zonas activas en %d contratos activos",
+                zonasActivas, contratosActivos
+            ));
+        }
+    }
+
+    // ==================== OPERACIONES MASIVAS ====================
+
+    @Transactional
+    public int activarPlanesMasivo(List<UUID> uuids) {
+        log.info("Activando {} planes masivamente", uuids.size());
         
-        // Agregar estadísticas
-        dto.setTotalTarifas(tarifaRepository.countByPlanTarifaUuid(planTarifa.getUuid()));
-        dto.setTarifasActivas(tarifaRepository.countByActivo(true));
-        dto.setTotalContratos(contratoRepository.countByPlanTarifa(planTarifa));
-        dto.setContratosActivos(contratoRepository.countByPlanTarifaAndEstado(planTarifa, EstadoContrato.ACTIVO));
+        int activados = 0;
+        for (UUID uuid : uuids) {
+            try {
+                PlanTarifa plan = buscarPorUuid(uuid);
+                if (!plan.getActivo()) {
+                    plan.setActivo(true);
+                    planTarifaRepository.save(plan);
+                    activados++;
+                }
+            } catch (Exception e) {
+                log.warn("Error activando plan {}: {}", uuid, e.getMessage());
+            }
+        }
         
-        return dto;
-    }    
+        return activados;
+    }
+
+    @Transactional
+    public int desactivarPlanesMasivo(List<UUID> uuids) {
+        log.info("Desactivando {} planes masivamente", uuids.size());
+        
+        int desactivados = 0;
+        for (UUID uuid : uuids) {
+            try {
+                if (puedeSerDesactivado(uuid)) {
+                    PlanTarifa plan = buscarPorUuid(uuid);
+                    if (plan.getActivo()) {
+                        plan.setActivo(false);
+                        planTarifaRepository.save(plan);
+                        desactivados++;
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("Error desactivando plan {}: {}", uuid, e.getMessage());
+            }
+        }
+        
+        return desactivados;
+    }
+
+    // ==================== REPORTES Y ESTADÍSTICAS ====================
+
+    @Transactional(readOnly = true)
+    public Map<String, Object> generarReporteUso() {
+        log.info("Generando reporte de uso de planes de tarifa");
+        
+        Map<String, Object> reporte = new HashMap<>();
+        
+        // Estadísticas generales
+        reporte.put("totalPlanes", planTarifaRepository.count());
+        reporte.put("planesActivos", planTarifaRepository.countByActivo(true));
+        reporte.put("planesConTarifas", planTarifaRepository.findPlanesConTarifas().size());
+        reporte.put("planesConContratos", planTarifaRepository.findPlanesConContratosZonas().size());
+        
+        // Top planes más utilizados
+        List<Object[]> planesMasUtilizados = planTarifaRepository.findPlanesMasUtilizados();
+        reporte.put("planesMasUtilizados", planesMasUtilizados.stream()
+            .limit(10)
+            .collect(Collectors.toList()));
+        
+        // Distribución de uso
+        List<Object[]> distribucionTarifas = planTarifaRepository.findPlanesConMasTarifas();
+        reporte.put("distribucionTarifas", distribucionTarifas.stream()
+            .limit(10)
+            .collect(Collectors.toList()));
+        
+        // Planes que requieren atención
+        List<PlanTarifa> planesSinUso = planTarifaRepository.findPlanesSinContratosZonas();
+        reporte.put("planesSinUso", planesSinUso.stream()
+            .filter(p -> p.getActivo())
+            .map(this::convertirADTO)
+            .collect(Collectors.toList()));
+        
+        return reporte;
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, Object> obtenerMetricasComparativas() {
+        log.info("Obteniendo métricas comparativas de planes");
+        
+        Map<String, Object> metricas = new HashMap<>();
+        
+        // Comparación de eficiencia
+        List<Object[]> estadisticas = planTarifaRepository.findPlanesConEstadisticas();
+        
+        List<Map<String, Object>> comparacion = estadisticas.stream()
+            .map(stat -> {
+                Map<String, Object> planMetrica = new HashMap<>();
+                planMetrica.put("uuid", stat[0]);
+                planMetrica.put("nombre", stat[1]);
+                planMetrica.put("activo", stat[2]);
+                planMetrica.put("totalTarifas", stat[3]);
+                planMetrica.put("tarifasActivas", stat[4]);
+                planMetrica.put("totalZonas", stat[5]);
+                planMetrica.put("zonasActivas", stat[6]);
+                planMetrica.put("contratosActivos", stat[7]);
+                
+                // Calcular ratios de eficiencia
+                Long totalTarifas = (Long) stat[3];
+                Long totalZonas = (Long) stat[5];
+                if (totalTarifas > 0 && totalZonas > 0) {
+                    double ratioUso = totalZonas.doubleValue() / totalTarifas.doubleValue();
+                    planMetrica.put("ratioUsoTarifas", ratioUso);
+                } else {
+                    planMetrica.put("ratioUsoTarifas", 0.0);
+                }
+                
+                return planMetrica;
+            })
+            .collect(Collectors.toList());
+        
+        metricas.put("comparacionPlanes", comparacion);
+        
+        return metricas;
+    }
+
+    // ==================== MÉTODOS DE UTILIDAD ADICIONALES ====================
+
+    @Transactional(readOnly = true)
+    public boolean existePlanConNombre(String nombre) {
+        return planTarifaRepository.findByNombre(nombre).isPresent();
+    }
+
+    @Transactional(readOnly = true)
+    public boolean existePlanConNombre(String nombre, UUID excludeUuid) {
+        Optional<PlanTarifa> planExistente = planTarifaRepository.findByNombre(nombre);
+        return planExistente.isPresent() && !planExistente.get().getUuid().equals(excludeUuid);
+    }
+
+    @Transactional(readOnly = true)
+    public long contarPlanesPorEstado(boolean activo) {
+        return planTarifaRepository.countByActivo(activo);
+    }
+
+    @Transactional(readOnly = true)
+    public List<PlanTarifa> buscarPlanesOrdenados(String campo, boolean ascendente) {
+        // Implementar ordenamiento personalizado según necesidades
+        return planTarifaRepository.findAll();
+    }
+
+    // ==================== IMPORTACIÓN Y EXPORTACIÓN ====================
+
+    public Map<String, Object> exportarDatosParaBackup() {
+        log.info("Exportando datos de planes de tarifa para backup");
+        
+        Map<String, Object> backup = new HashMap<>();
+        List<PlanTarifa> planes = planTarifaRepository.findAll();
+        
+        backup.put("planes", planes.stream()
+            .map(this::convertirADTOConEstadisticas)
+            .collect(Collectors.toList()));
+        backup.put("fechaExportacion", java.time.LocalDateTime.now());
+        backup.put("totalRegistros", planes.size());
+        
+        return backup;
+    }
+
+    @Transactional
+    public int importarPlanesDesdeBackup(List<PlanTarifaDTO> planesDTO) {
+        log.info("Importando {} planes desde backup", planesDTO.size());
+        
+        int importados = 0;
+        for (PlanTarifaDTO dto : planesDTO) {
+            try {
+                if (!existePlanConNombre(dto.getNombre())) {
+                    crear(dto);
+                    importados++;
+                }
+            } catch (Exception e) {
+                log.warn("Error importando plan {}: {}", dto.getNombre(), e.getMessage());
+            }
+        }
+        
+        return importados;
+    }
 }

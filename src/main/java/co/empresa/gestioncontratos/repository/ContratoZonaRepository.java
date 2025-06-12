@@ -150,4 +150,24 @@ public interface ContratoZonaRepository extends JpaRepository<ContratoZona, Long
                                      @Param("activo") Boolean activo,
                                      @Param("coordinadorUuid") UUID coordinadorUuid,
                                      Pageable pageable);
+
+       @Query("SELECT COUNT(cz) FROM ContratoZona cz WHERE cz.activo = true")
+       long countByActivoTrue();
+
+       @Query("SELECT cz FROM ContratoZona cz WHERE cz.contrato = :contrato " +
+              "AND cz.estado != 'CANCELADO' AND cz.activo = true " +
+              "ORDER BY cz.fechaCreacion ASC")
+       List<ContratoZona> findByContratoAndEstadoNoCanceladoOrderByFechaCreacionAsc(@Param("contrato") Contrato contrato);
+
+       @Query("SELECT COUNT(cz) FROM ContratoZona cz WHERE cz.contrato = :contrato " +
+              "AND cz.estado = 'COMPLETADO' AND cz.activo = true")
+       long countByContratoAndEstadoCompletado(@Param("contrato") Contrato contrato);                                     
+
+
+       @Query("SELECT CASE WHEN COUNT(cz) > 0 THEN true ELSE false END FROM ContratoZona cz " +
+       "WHERE cz.contrato.uuid = :contratoUuid " +
+       "AND (cz.coordinadorZona = :usuario OR cz.coordinadorOperativo = :usuario) " +
+       "AND cz.activo = true")
+       boolean esCoordinadorDeContrato(@Param("contratoUuid") UUID contratoUuid, 
+                                   @Param("usuario") Usuario usuario);
 }

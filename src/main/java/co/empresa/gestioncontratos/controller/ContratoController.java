@@ -6,21 +6,17 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-import co.empresa.gestioncontratos.dto.AsignacionMasivaDTO;
+import co.empresa.gestioncontratos.dto.*;
 import co.empresa.gestioncontratos.service.ZonaService;
+import co.empresa.gestioncontratos.service.PlanTarifaService;
 import jakarta.validation.Valid;
-import co.empresa.gestioncontratos.dto.ContratoDTO;
-import co.empresa.gestioncontratos.dto.UsuarioResumenDTO;
 
-import co.empresa.gestioncontratos.entity.Contrato;
-import co.empresa.gestioncontratos.entity.ContratoPredio;
-import co.empresa.gestioncontratos.entity.PredioOperario;
-import co.empresa.gestioncontratos.entity.Usuario;
+import co.empresa.gestioncontratos.entity.*;
 import co.empresa.gestioncontratos.enums.EstadoContrato;
+import co.empresa.gestioncontratos.enums.EstadoContratoZona;
 import co.empresa.gestioncontratos.enums.PerfilUsuario;
 import co.empresa.gestioncontratos.repository.PredioOperarioRepository;
 import co.empresa.gestioncontratos.service.ContratoService;
-
 import co.empresa.gestioncontratos.service.UsuarioService;
 
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -38,12 +34,16 @@ public class ContratoController {
     private final ContratoService contratoService;
     private final ZonaService zonaService;
     private final UsuarioService usuarioService;
+    private final PlanTarifaService planTarifaService;
     private final PredioOperarioRepository predioOperarioRepository;
-    
+
+    // ==================== VISTAS WEB ====================
 
     // Vista principal de contratos
     @GetMapping
     public String listar(@AuthenticationPrincipal Usuario usuarioActual, Model model) {
+        log.info("=== LISTANDO CONTRATOS ===");
+        log.info("Usuario: {} ({})", usuarioActual.getUsername(), usuarioActual.getPerfil());
         
         List<Contrato> contratos;
         
@@ -58,7 +58,6 @@ public class ContratoController {
                 contratos = contratoService.listarPorCoordinador(usuarioActual);
                 break;
             case OPERARIO:
-                // Los operarios ven contratos donde tienen predios asignados
                 contratos = contratoService.listarContratoPorOperario(usuarioActual);
                 break;
             default:
@@ -71,53 +70,257 @@ public class ContratoController {
         return "admin/contratos";
     }
 
-    // Vista de detalle/asignación de un contrato
+    // Vista de detalle/asignación de un contrato (ACTUALIZADA)
     @GetMapping("/{uuid}/asignaciones")
     public String verAsignaciones(@PathVariable UUID uuid, 
                                  @AuthenticationPrincipal Usuario usuarioActual,
                                  Model model) {
+        log.info("=== VER ASIGNACIONES CONTRATO: {} ===", uuid);
+        log.info("Usuario: {} ({})", usuarioActual.getUsername(), usuarioActual.getPerfil());
         
         Contrato contrato = contratoService.buscarPorUuid(uuid);
         
         // Verificar permisos de visualización
         if (!tienePermisoVerContrato(usuarioActual, contrato)) {
+            log.warn("Usuario {} sin permisos para ver contrato {}", usuarioActual.getUsername(), uuid);
             return "redirect:/admin/contratos";
         }
         
         // Obtener estadísticas del contrato
         Map<String, Object> estadisticas = contratoService.obtenerEstadisticas(contrato);
         
-        // Obtener todos los operarios asignados al contrato (a través de los predios)
-     //   List<Usuario> operariosAsignados = contratoService.listarPorOperario(contrato);
+        // Obtener zonas del contrato
+        List<ContratoZona> zonasContrato = contratoService.listarZonasDelContrato(uuid);
         
-        // Cargar listas para asignación según permisos
         model.addAttribute("contrato", contrato);
         model.addAttribute("estadisticas", estadisticas);
-     //   model.addAttribute("operariosAsignados", operariosAsignados);
+        model.addAttribute("zonasContrato", zonasContrato);
         
         // Solo ADMIN puede asignar supervisores
         if (usuarioActual.getPerfil() == PerfilUsuario.ADMINISTRADOR) {
             model.addAttribute("supervisoresDisponibles", usuarioService.findSupervisoresActivos());
         }
         
-        // ADMIN y SUPERVISOR del contrato pueden asignar coordinadores
-        if (puedeAsignarCoordinador(usuarioActual, contrato)) {
+        // Para gestionar zonas (ADMIN y SUPERVISOR del contrato)
+        if (puedeGestionarZonas(usuarioActual, contrato)) {
+            model.addAttribute("zonasDisponibles", zonaService.listarActivas());
+            model.addAttribute("planesTarifaDisponibles", planTarifaService.listarActivos());
             model.addAttribute("coordinadoresDisponibles", usuarioService.findCoordinadoresActivos());
         }
         
         // Para asignar operarios a predios
         if (puedeAsignarOperario(usuarioActual, contrato)) {
             model.addAttribute("operariosDisponibles", usuarioService.findOperariosActivos());
-            model.addAttribute("zonasDelContrato", zonaService.listarPorContrato(contrato.getId()));
             model.addAttribute("prediosDelContrato", contrato.getPredios());
         }
         
         model.addAttribute("puedeEditarAsignaciones", tienePermisoParaAsignar(usuarioActual, contrato));
+        model.addAttribute("puedeGestionarZonas", puedeGestionarZonas(usuarioActual, contrato));
         
         return "admin/contrato-asignaciones";
     }
 
-    // Asignar supervisor a contrato (solo ADMIN)
+    // Vista para crear/editar contrato (ACTUALIZADA)
+    @GetMapping("/nuevo")
+    public String mostrarFormularioCrear(@AuthenticationPrincipal Usuario usuarioActual, Model model) {
+        if (usuarioActual.getPerfil() != PerfilUsuario.ADMINISTRADOR) {
+            return "redirect:/admin/contratos";
+        }
+        
+        model.addAttribute("contratoDTO", new ContratoDTO());
+        model.addAttribute("supervisoresDisponibles", usuarioService.findSupervisoresActivos());
+        model.addAttribute("zonasDisponibles", zonaService.listarActivas());
+        model.addAttribute("planesTarifaDisponibles", planTarifaService.listarActivos());
+        model.addAttribute("coordinadoresDisponibles", usuarioService.findCoordinadoresActivos());
+        model.addAttribute("esNuevo", true);
+        
+        return "admin/contrato-form";
+    }
+
+    @GetMapping("/{uuid}/editar")
+    public String mostrarFormularioEditar(@PathVariable UUID uuid,
+                                         @AuthenticationPrincipal Usuario usuarioActual,
+                                         Model model) {
+        Contrato contrato = contratoService.buscarPorUuid(uuid);
+        
+        if (!tienePermisoEditarContrato(usuarioActual, contrato)) {
+            return "redirect:/admin/contratos";
+        }
+        
+        ContratoDTO contratoDTO = contratoService.convertirADTOCompleto(contrato);
+        
+        model.addAttribute("contratoDTO", contratoDTO);
+        model.addAttribute("supervisoresDisponibles", usuarioService.findSupervisoresActivos());
+        model.addAttribute("zonasDisponibles", zonaService.listarActivas());
+        model.addAttribute("planesTarifaDisponibles", planTarifaService.listarActivos());
+        model.addAttribute("coordinadoresDisponibles", usuarioService.findCoordinadoresActivos());
+        model.addAttribute("esNuevo", false);
+        
+        return "admin/contrato-form";
+    }
+
+    // ==================== API REST ENDPOINTS ====================
+
+    // Listar contratos via API
+    @GetMapping("/api/listar")
+    @ResponseBody
+    public ResponseEntity<List<ContratoDTO>> listarContratosAPI(@AuthenticationPrincipal Usuario usuarioActual) {
+        log.info("=== API: LISTANDO CONTRATOS ===");
+        log.info("Usuario: {} ({})", usuarioActual.getUsername(), usuarioActual.getPerfil());
+        
+        try {
+            List<Contrato> contratos;
+            
+            switch (usuarioActual.getPerfil()) {
+                case ADMINISTRADOR:
+                    contratos = contratoService.listarTodos();
+                    break;
+                case SUPERVISOR:
+                    contratos = contratoService.listarPorSupervisor(usuarioActual);
+                    break;
+                case COORDINADOR:
+                    contratos = contratoService.listarPorCoordinador(usuarioActual);
+                    break;
+                case OPERARIO:
+                    contratos = contratoService.listarPorOperario(usuarioActual);
+                    break;
+                default:
+                    contratos = new ArrayList<>();
+            }
+            
+            List<ContratoDTO> contratosDTO = contratos.stream()
+                .map(contratoService::convertirADTOCompleto)
+                .collect(Collectors.toList());
+
+            log.info("✅ Retornando {} contratos", contratosDTO.size());
+            return ResponseEntity.ok(contratosDTO);
+            
+        } catch (Exception e) {
+            log.error("❌ Error al listar contratos: ", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    // Crear contrato via API (ACTUALIZADO)
+    @PostMapping("/api/crear")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> crear(@Valid @RequestBody ContratoDTO contratoDTO,
+                                                    @AuthenticationPrincipal Usuario usuarioActual) {
+        log.info("=== CREANDO NUEVO CONTRATO ===");
+        log.info("Usuario: {} ({})", usuarioActual.getUsername(), usuarioActual.getPerfil());
+        log.info("Datos del contrato: {}", contratoDTO);
+        
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            // Solo ADMINISTRADOR puede crear contratos
+            if (usuarioActual.getPerfil() != PerfilUsuario.ADMINISTRADOR) {
+                response.put("success", false);
+                response.put("message", "No tiene permisos para crear contratos");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+            }
+            
+            // Validar que tenga al menos una zona
+            if (contratoDTO.getZonas() == null || contratoDTO.getZonas().isEmpty()) {
+                response.put("success", false);
+                response.put("message", "El contrato debe tener al menos una zona");
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+            Contrato contrato = contratoService.crear(contratoDTO);
+            
+            response.put("success", true);
+            response.put("message", "Contrato creado exitosamente");
+            response.put("contrato", Map.of(
+                "uuid", contrato.getUuid(),
+                "numeroContrato", contrato.getNumeroContrato(),
+                "objetivo", contrato.getObjetivo(),
+                "totalZonas", contratoDTO.getZonas().size()
+            ));
+            
+            log.info("✅ Contrato creado: {} con {} zonas", 
+                contrato.getNumeroContrato(), contratoDTO.getZonas().size());
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+            
+        } catch (Exception e) {
+            log.error("❌ Error al crear contrato: ", e);
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    // Actualizar contrato via API (ACTUALIZADO)
+    @PutMapping("/api/{uuid}")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> actualizar(@PathVariable UUID uuid,
+                                                        @Valid @RequestBody ContratoDTO contratoDTO,
+                                                        @AuthenticationPrincipal Usuario usuarioActual) {
+        log.info("=== ACTUALIZANDO CONTRATO: {} ===", uuid);
+        log.info("Usuario: {} ({})", usuarioActual.getUsername(), usuarioActual.getPerfil());
+        log.info("Nuevos datos: {}", contratoDTO);
+        
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            Contrato contrato = contratoService.buscarPorUuid(uuid);
+            
+            if (!tienePermisoEditarContrato(usuarioActual, contrato)) {
+                response.put("success", false);
+                response.put("message", "No tiene permisos para editar este contrato");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+            }
+            
+            Contrato contratoActualizado = contratoService.actualizar(uuid, contratoDTO);
+            
+            response.put("success", true);
+            response.put("message", "Contrato actualizado exitosamente");
+            response.put("contrato", Map.of(
+                "uuid", contratoActualizado.getUuid(),
+                "numeroContrato", contratoActualizado.getNumeroContrato(),
+                "objetivo", contratoActualizado.getObjetivo()
+            ));
+            
+            log.info("✅ Contrato actualizado: {}", contratoActualizado.getNumeroContrato());
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            log.error("❌ Error al actualizar contrato: ", e);
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    // Obtener contrato por UUID via API
+    @GetMapping("/api/{uuid}")
+    @ResponseBody
+    public ResponseEntity<ContratoDTO> obtenerPorUuid(@PathVariable UUID uuid,
+                                                    @AuthenticationPrincipal Usuario usuarioActual) {
+        log.info("=== OBTENIENDO CONTRATO: {} ===", uuid);
+        log.info("Usuario: {} ({})", usuarioActual.getUsername(), usuarioActual.getPerfil());
+        
+        try {
+            Contrato contrato = contratoService.buscarPorUuid(uuid);
+            
+            if (!tienePermisoVerContrato(usuarioActual, contrato)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+            
+            ContratoDTO dto = contratoService.convertirADTOCompleto(contrato);
+            
+            log.info("✅ Contrato encontrado: {} con {} zonas", 
+                contrato.getNumeroContrato(), dto.getZonas().size());
+            return ResponseEntity.ok(dto);
+            
+        } catch (Exception e) {
+            log.error("❌ Error al obtener contrato: ", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    // ==================== GESTIÓN DE SUPERVISOR ====================
+
     @PostMapping("/{uuid}/asignar-supervisor")
     @ResponseBody
     public ResponseEntity<?> asignarSupervisor(@PathVariable UUID uuid,
@@ -146,28 +349,34 @@ public class ContratoController {
         }
     }
 
-    // Asignar coordinador a contrato (ADMIN y SUPERVISOR del contrato)
-    @PostMapping("/{uuid}/asignar-coordinador")
+    // ==================== GESTIÓN DE ZONAS (NUEVO) ====================
+
+    @PostMapping("/{contratoUuid}/zonas")
     @ResponseBody
-    public ResponseEntity<?> asignarCoordinador(@PathVariable UUID uuid,
-                                               @RequestParam UUID coordinadorUuid,
-                                               @AuthenticationPrincipal Usuario usuarioActual) {
+    public ResponseEntity<?> agregarZona(@PathVariable UUID contratoUuid,
+                                        @Valid @RequestBody ContratoZonaDTO zonaDTO,
+                                        @AuthenticationPrincipal Usuario usuarioActual) {
         
-        Contrato contrato = contratoService.buscarPorUuid(uuid);
+        Contrato contrato = contratoService.buscarPorUuid(contratoUuid);
         
-        if (!puedeAsignarCoordinador(usuarioActual, contrato)) {
+        if (!puedeGestionarZonas(usuarioActual, contrato)) {
             return ResponseEntity.status(403).body(Map.of(
                 "success", false,
-                "message", "No tiene permisos para esta acción"
+                "message", "No tiene permisos para gestionar zonas"
             ));
         }
         
         try {
-            Usuario coordinador = contratoService.agregarCoordinador(uuid, coordinadorUuid);
+            ContratoZona contratoZona = contratoService.agregarZona(contratoUuid, zonaDTO);
+            
             return ResponseEntity.ok(Map.of(
                 "success", true,
-                "message", "Coordinador asignado exitosamente",
-                "coordinadorNombre", coordinador.getNombre() + " " + coordinador.getApellido()
+                "message", "Zona agregada exitosamente",
+                "zona", Map.of(
+                    "uuid", contratoZona.getUuid(),
+                    "zonaNombre", contratoZona.getNombreZona(),
+                    "planTarifaNombre", contratoZona.getNombrePlanTarifa()
+                )
             ));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of(
@@ -177,27 +386,33 @@ public class ContratoController {
         }
     }
 
-    // Remover coordinador del contrato
-    @DeleteMapping("/{uuid}/coordinador/{coordinadorUuid}")
+    @PutMapping("/{contratoUuid}/zonas/{zonaUuid}")
     @ResponseBody
-    public ResponseEntity<?> removerCoordinador(@PathVariable UUID uuid,
-                                               @PathVariable UUID coordinadorUuid,
-                                               @AuthenticationPrincipal Usuario usuarioActual) {
+    public ResponseEntity<?> actualizarZona(@PathVariable UUID contratoUuid,
+                                           @PathVariable UUID zonaUuid,
+                                           @Valid @RequestBody ContratoZonaDTO zonaDTO,
+                                           @AuthenticationPrincipal Usuario usuarioActual) {
         
-        Contrato contrato = contratoService.buscarPorUuid(uuid);
+        Contrato contrato = contratoService.buscarPorUuid(contratoUuid);
         
-        if (!puedeAsignarCoordinador(usuarioActual, contrato)) {
+        if (!puedeGestionarZonas(usuarioActual, contrato)) {
             return ResponseEntity.status(403).body(Map.of(
                 "success", false,
-                "message", "No tiene permisos para esta acción"
+                "message", "No tiene permisos para gestionar zonas"
             ));
         }
         
         try {
-            contratoService.removerCoordinador(uuid, coordinadorUuid);
+            ContratoZona contratoZona = contratoService.actualizarZona(zonaUuid, zonaDTO);
+            
             return ResponseEntity.ok(Map.of(
                 "success", true,
-                "message", "Coordinador removido exitosamente"
+                "message", "Zona actualizada exitosamente",
+                "zona", Map.of(
+                    "uuid", contratoZona.getUuid(),
+                    "zonaNombre", contratoZona.getNombreZona(),
+                    "planTarifaNombre", contratoZona.getNombrePlanTarifa()
+                )
             ));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of(
@@ -207,7 +422,149 @@ public class ContratoController {
         }
     }
 
-    // Asignar operario a predio específico
+    @DeleteMapping("/{contratoUuid}/zonas/{zonaUuid}")
+    @ResponseBody
+    public ResponseEntity<?> removerZona(@PathVariable UUID contratoUuid,
+                                        @PathVariable UUID zonaUuid,
+                                        @AuthenticationPrincipal Usuario usuarioActual) {
+        
+        Contrato contrato = contratoService.buscarPorUuid(contratoUuid);
+        
+        if (!puedeGestionarZonas(usuarioActual, contrato)) {
+            return ResponseEntity.status(403).body(Map.of(
+                "success", false,
+                "message", "No tiene permisos para gestionar zonas"
+            ));
+        }
+        
+        try {
+            contratoService.removerZona(zonaUuid);
+            
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Zona removida exitosamente"
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "success", false,
+                "message", e.getMessage()
+            ));
+        }
+    }
+
+    @GetMapping("/{contratoUuid}/zonas")
+    @ResponseBody
+    public ResponseEntity<?> listarZonasContrato(@PathVariable UUID contratoUuid,
+                                                @AuthenticationPrincipal Usuario usuarioActual) {
+        
+        Contrato contrato = contratoService.buscarPorUuid(contratoUuid);
+        
+        if (!tienePermisoVerContrato(usuarioActual, contrato)) {
+            return ResponseEntity.status(403).body(Map.of(
+                "success", false,
+                "message", "No tiene permisos para ver este contrato"
+            ));
+        }
+        
+        try {
+            List<ContratoZona> zonas = contratoService.listarZonasDelContrato(contratoUuid);
+            
+            List<Map<String, Object>> zonasInfo = zonas.stream().map(zona -> {
+                Map<String, Object> info = new HashMap<>();
+                info.put("uuid", zona.getUuid());
+                info.put("zonaNombre", zona.getNombreZona());
+                info.put("zonaUuid", zona.getZona().getUuid());
+                info.put("planTarifaNombre", zona.getNombrePlanTarifa());
+                info.put("planTarifaUuid", zona.getPlanTarifa().getUuid());
+                info.put("coordinadorZonaNombre", zona.getNombreCoordinadorZona());
+                info.put("coordinadorZonaUuid", zona.getCoordinadorZona() != null ? zona.getCoordinadorZona().getUuid() : null);
+                info.put("coordinadorOperativoNombre", zona.getNombreCoordinadorOperativo());
+                info.put("coordinadorOperativoUuid", zona.getCoordinadorOperativo() != null ? zona.getCoordinadorOperativo().getUuid() : null);
+                info.put("estado", zona.getEstado());
+                info.put("activo", zona.getActivo());
+                return info;
+            }).collect(Collectors.toList());
+            
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "zonas", zonasInfo
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "success", false,
+                "message", e.getMessage()
+            ));
+        }
+    }
+
+    // ==================== GESTIÓN DE COORDINADORES POR ZONA (NUEVO) ====================
+
+    @PostMapping("/{contratoUuid}/zonas/{zonaUuid}/coordinador-zona")
+    @ResponseBody
+    public ResponseEntity<?> asignarCoordinadorZona(@PathVariable UUID contratoUuid,
+                                                   @PathVariable UUID zonaUuid,
+                                                   @RequestParam UUID coordinadorUuid,
+                                                   @AuthenticationPrincipal Usuario usuarioActual) {
+        
+        Contrato contrato = contratoService.buscarPorUuid(contratoUuid);
+        
+        if (!puedeAsignarCoordinador(usuarioActual, contrato)) {
+            return ResponseEntity.status(403).body(Map.of(
+                "success", false,
+                "message", "No tiene permisos para asignar coordinadores"
+            ));
+        }
+        
+        try {
+            ContratoZona contratoZona = contratoService.asignarCoordinadorZona(zonaUuid, coordinadorUuid);
+            
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Coordinador de zona asignado exitosamente",
+                "coordinadorNombre", contratoZona.getNombreCoordinadorZona()
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "success", false,
+                "message", e.getMessage()
+            ));
+        }
+    }
+
+    @PostMapping("/{contratoUuid}/zonas/{zonaUuid}/coordinador-operativo")
+    @ResponseBody
+    public ResponseEntity<?> asignarCoordinadorOperativo(@PathVariable UUID contratoUuid,
+                                                        @PathVariable UUID zonaUuid,
+                                                        @RequestParam UUID coordinadorUuid,
+                                                        @AuthenticationPrincipal Usuario usuarioActual) {
+        
+        Contrato contrato = contratoService.buscarPorUuid(contratoUuid);
+        
+        if (!puedeAsignarCoordinador(usuarioActual, contrato)) {
+            return ResponseEntity.status(403).body(Map.of(
+                "success", false,
+                "message", "No tiene permisos para asignar coordinadores"
+            ));
+        }
+        
+        try {
+            ContratoZona contratoZona = contratoService.asignarCoordinadorOperativo(zonaUuid, coordinadorUuid);
+            
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Coordinador operativo asignado exitosamente",
+                "coordinadorNombre", contratoZona.getNombreCoordinadorOperativo()
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "success", false,
+                "message", e.getMessage()
+            ));
+        }
+    }
+
+    // ==================== GESTIÓN DE PREDIOS Y OPERARIOS (SIN CAMBIOS) ====================
+
     @PostMapping("/{contratoUuid}/predios/{predioUuid}/asignar-operario")
     @ResponseBody
     public ResponseEntity<?> asignarOperarioAPredio(@PathVariable UUID contratoUuid,
@@ -242,7 +599,6 @@ public class ContratoController {
         }
     }
 
-    // Asignar múltiples operarios a múltiples predios
     @PostMapping("/{contratoUuid}/asignar-operarios-masivo")
     @ResponseBody
     public ResponseEntity<?> asignarOperariosMasivo(@PathVariable UUID contratoUuid,
@@ -277,7 +633,8 @@ public class ContratoController {
         }
     }
 
-    // Obtener operarios disponibles para un contrato
+    // ==================== CONSULTAS Y ESTADÍSTICAS ====================
+
     @GetMapping("/{contratoUuid}/operarios-disponibles")
     @ResponseBody
     public ResponseEntity<?> obtenerOperariosDisponibles(@PathVariable UUID contratoUuid,
@@ -293,7 +650,6 @@ public class ContratoController {
         }
         
         try {
-            // Obtener operarios que no están asignados a todos los predios del contrato
             List<Usuario> operariosDisponibles = contratoService.obtenerOperariosDisponibles(contrato);
             
             return ResponseEntity.ok(Map.of(
@@ -313,7 +669,6 @@ public class ContratoController {
         }
     }
 
-    // Obtener resumen de asignaciones del contrato
     @GetMapping("/{contratoUuid}/resumen-asignaciones")
     @ResponseBody
     public ResponseEntity<?> obtenerResumenAsignaciones(@PathVariable UUID contratoUuid,
@@ -329,29 +684,7 @@ public class ContratoController {
         }
         
         try {
-            Map<String, Object> resumen = new HashMap<>();
-            
-            // Supervisor
-            resumen.put("supervisor", contrato.getSupervisor() != null ? Map.of(
-                "uuid", contrato.getSupervisor().getUuid(),
-                "nombre", contrato.getSupervisor().getNombre() + " " + contrato.getSupervisor().getApellido()
-            ) : null);
-            
-            // Coordinadores
-            resumen.put("coordinadores", contrato.getCoordinadores().stream().map(coord -> Map.of(
-                "uuid", coord.getUuid(),
-                "nombre", coord.getNombre() + " " + coord.getApellido()
-            )).collect(Collectors.toList()));
-            
-            // Operarios con sus predios asignados
-            List<Map<String, Object>> operariosInfo = contratoService.obtenerOperariosConPredios(contrato);
-            resumen.put("operarios", operariosInfo);
-            
-            // Estadísticas
-            resumen.put("totalPredios", contrato.getPredios().size());
-            resumen.put("prediosAsignados", contratoService.contarPrediosAsignados(contrato));
-            resumen.put("prediosSinAsignar", contratoService.contarPrediosSinAsignar(contrato));
-            resumen.put("totalOperarios", contratoService.obtenerOperariosDelContrato(contrato).size());
+            Map<String, Object> resumen = contratoService.obtenerResumenAsignaciones(contratoUuid);
             
             return ResponseEntity.ok(resumen);
         } catch (Exception e) {
@@ -362,293 +695,88 @@ public class ContratoController {
         }
     }
 
-    // Métodos auxiliares de permisos
-    private boolean tienePermisoVerContrato(Usuario usuario, Contrato contrato) {
-        switch (usuario.getPerfil()) {
-            case ADMINISTRADOR:
-                return true;
-            case SUPERVISOR:
-                return contrato.getSupervisor() != null && 
-                       contrato.getSupervisor().getId().equals(usuario.getId());
-            case COORDINADOR:
-                return contrato.getCoordinadores().stream()
-                    .anyMatch(coord -> coord.getId().equals(usuario.getId()));
-       /*      case OPERARIO:
-                // Operario puede ver si tiene al menos un predio asignado
-                return contrato.getPredios().stream()
-                    .anyMatch(cp -> cp.getOperario() != null &&  cp.getOperario().getId().equals(usuario.getId()));*/
-            default:
-                return false;
-        }
-    }
-
-    private boolean tienePermisoParaAsignar(Usuario usuario, Contrato contrato) {
-        return usuario.getPerfil() == PerfilUsuario.ADMINISTRADOR ||
-               (usuario.getPerfil() == PerfilUsuario.SUPERVISOR && 
-                contrato.getSupervisor() != null && 
-                contrato.getSupervisor().getId().equals(usuario.getId())) ||
-               (usuario.getPerfil() == PerfilUsuario.COORDINADOR &&
-                contrato.getCoordinadores().stream()
-                    .anyMatch(coord -> coord.getId().equals(usuario.getId())));
-    }
-
-    private boolean puedeAsignarCoordinador(Usuario usuario, Contrato contrato) {
-        return usuario.getPerfil() == PerfilUsuario.ADMINISTRADOR ||
-               (usuario.getPerfil() == PerfilUsuario.SUPERVISOR && 
-                contrato.getSupervisor() != null && 
-                contrato.getSupervisor().getId().equals(usuario.getId()));
-    }
-
-    private boolean puedeAsignarOperario(Usuario usuario, Contrato contrato) {
-        if (usuario.getPerfil() == PerfilUsuario.ADMINISTRADOR) return true;
-        
-        if (usuario.getPerfil() == PerfilUsuario.SUPERVISOR && 
-            contrato.getSupervisor() != null && 
-            contrato.getSupervisor().getId().equals(usuario.getId())) {
-            return true;
-        }
-        
-        if (usuario.getPerfil() == PerfilUsuario.COORDINADOR) {
-            return contrato.getCoordinadores().stream()
-                .anyMatch(coord -> coord.getId().equals(usuario.getId()));
-        }
-        
-        return false;
-    }
-    @GetMapping("/api/listar")
+    @GetMapping("/{contratoUuid}/estadisticas")
     @ResponseBody
-    public ResponseEntity<List<ContratoDTO>> listarContratosAPI(@AuthenticationPrincipal Usuario usuarioActual) {
-        log.info("=== API: LISTANDO CONTRATOS ===");
-        log.info("Usuario: {} ({})", usuarioActual.getUsername(), usuarioActual.getPerfil());
+    public ResponseEntity<?> obtenerEstadisticas(@PathVariable UUID contratoUuid,
+                                                @AuthenticationPrincipal Usuario usuarioActual) {
         
-        try {
-            List<Contrato> contratos;
-            
-            // Filtrar contratos según el perfil del usuario
-            switch (usuarioActual.getPerfil()) {
-                case ADMINISTRADOR:
-                    contratos = contratoService.listarTodos();
-                    break;
-                case SUPERVISOR:
-                    contratos = contratoService.listarPorSupervisor(usuarioActual);
-                    break;
-                case COORDINADOR:
-                    contratos = contratoService.listarPorCoordinador(usuarioActual);
-                    break;
-                case OPERARIO:
-                    contratos = contratoService.listarPorOperario(usuarioActual);
-                    break;
-                default:
-                    contratos = new ArrayList<>();
-            }
-            
-            List<ContratoDTO> contratosDTO = contratos.stream()
-                .map(contrato -> {
-                    ContratoDTO dto = ContratoDTO.builder()
-                        .uuid(contrato.getUuid())
-                        .codigo(contrato.getNumeroContrato())
-                        .objetivo(contrato.getObjetivo())
-                        .fechaInicio(contrato.getFechaInicio())
-                        .fechaFin(contrato.getFechaFin())
-                        .estado(contrato.getEstado())
-                        
-                        // CORREGIDO: Mapear zona correctamente
-                        .zonaUuid(contrato.getZona() != null ? contrato.getZona().getUuid() : null)
-                        .zonaNombre(contrato.getZona() != null ? contrato.getZona().getNombre() : null)
-                        
-                        // CORREGIDO: Mapear plan de tarifa correctamente  
-                        .planTarifaUuid(contrato.getPlanTarifa() != null ? contrato.getPlanTarifa().getUuid() : null)
-                        .planTarifaNombre(contrato.getNombrePlanTarifa())
-                        
-                        // CORREGIDO: Mapear supervisor correctamente usando supervisorUuid
-                        .supervisorUuid(contrato.getSupervisor() != null ? contrato.getSupervisor().getUuid() : null)
-                        .supervisorNombre(contrato.getNombreSupervisor())
-                        
-                        .build();
-                    
-                    // Agregar coordinadores
-                    if (contrato.getCoordinadores() != null && !contrato.getCoordinadores().isEmpty()) {
-                        // Agregar UUIDs de coordinadores
-                        dto.setCoordinadorUuids(
-                            contrato.getCoordinadores().stream()
-                                .map(Usuario::getUuid)
-                                .collect(Collectors.toList())
-                        );
-                        
-                        // Agregar información resumida de coordinadores
-                        dto.setCoordinadores(
-                            contrato.getCoordinadores().stream()
-                                .map(coord -> UsuarioResumenDTO.builder()
-                                    .uuid(coord.getUuid())
-                                    .nombre(coord.getNombre())
-                                    .apellido(coord.getApellido())
-                                    .username(coord.getUsername())
-                                    .build())
-                                .collect(Collectors.toList())
-                        );
-                        
-                        dto.setCantidadCoordinadores(contrato.getCoordinadores().size());
-                    } else {
-                        dto.setCantidadCoordinadores(0);
-                    }
-                    
-                    // Agregar estadísticas del contrato
-                    Map<String, Object> estadisticas = contratoService.obtenerEstadisticas(contrato);
-                    dto.setTotalPredios(((Number) estadisticas.get("totalPredios")).intValue());
-                    dto.setPrediosAsignados(((Number) estadisticas.get("prediosAsignados")).intValue());
-                    dto.setTotalOperarios(contratoService.obtenerOperariosDelContrato(contrato).size());
-                    dto.setPorcentajeAvance(((Number) estadisticas.get("porcentajeCompletado")).doubleValue());
-                    
-                    // Agregar información de zonas
-                    dto.setTotalZonas(1);                    
-                    dto.setTotalSectores(((Number) estadisticas.get("totalSectores")).intValue());
-                    dto.setSectoresActivos(((Number) estadisticas.get("sectoresActivos")).intValue());
-                    
-                    // Verificar si puede ser eliminado
-                    dto.setPuedeSerEliminado(contrato.puedeSerEditado()); // o tu lógica específica
-                    
-                    return dto;
-                })
-                .collect(Collectors.toList());
-
-            log.info("✅ Retornando {} contratos", contratosDTO.size());
-            return ResponseEntity.ok(contratosDTO);
-            
-        } catch (Exception e) {
-            log.error("❌ Error al listar contratos: ", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }    
-    public ResponseEntity<Map<String, Object>> crear(@Valid @RequestBody ContratoDTO contratoDTO,
-                                                    @AuthenticationPrincipal Usuario usuarioActual) {
-        log.info("=== CREANDO NUEVO CONTRATO ===");
-        log.info("Usuario: {} ({})", usuarioActual.getUsername(), usuarioActual.getPerfil());
-        log.info("Datos del contrato: {}", contratoDTO);
+        Contrato contrato = contratoService.buscarPorUuid(contratoUuid);
         
-        Map<String, Object> response = new HashMap<>();
-        
-        try {
-            // Solo ADMINISTRADOR puede crear contratos
-            if (usuarioActual.getPerfil() != PerfilUsuario.ADMINISTRADOR) {
-                response.put("success", false);
-                response.put("message", "No tiene permisos para crear contratos");
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
-            }
-            
-            Contrato contrato = contratoService.crear(contratoDTO);
-            
-            response.put("success", true);
-            response.put("message", "Contrato creado exitosamente");
-            response.put("contrato", Map.of(
-                "uuid", contrato.getUuid(),
-                "numeroContrato", contrato.getNumeroContrato(),
-                "objetivo", contrato.getObjetivo()
+        if (!tienePermisoVerContrato(usuarioActual, contrato)) {
+            return ResponseEntity.status(403).body(Map.of(
+                "success", false,
+                "message", "No tiene permisos para ver este contrato"
             ));
-            
-            log.info("✅ Contrato creado: {}", contrato.getNumeroContrato());
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
-            
-        } catch (Exception e) {
-            log.error("❌ Error al crear contrato: ", e);
-            response.put("success", false);
-            response.put("message", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
         }
-    }
-
-    @PutMapping("/api/{uuid}")
-    @ResponseBody
-    public ResponseEntity<Map<String, Object>> actualizar(@PathVariable UUID uuid,
-                                                        @Valid @RequestBody ContratoDTO contratoDTO,
-                                                        @AuthenticationPrincipal Usuario usuarioActual) {
-        log.info("=== ACTUALIZANDO CONTRATO: {} ===", uuid);
-        log.info("Usuario: {} ({})", usuarioActual.getUsername(), usuarioActual.getPerfil());
-        log.info("Nuevos datos: {}", contratoDTO);
-        
-        Map<String, Object> response = new HashMap<>();
         
         try {
-            Contrato contratoActualizado = contratoService.actualizar(uuid, contratoDTO);
+            Map<String, Object> estadisticas = contratoService.obtenerEstadisticas(contrato);
+            Map<String, Object> estadisticasZonas = contratoService.obtenerEstadisticasZonas(contratoUuid);
             
-            response.put("success", true);
-            response.put("message", "Contrato actualizado exitosamente");
-            response.put("contrato", Map.of(
-                "uuid", contratoActualizado.getUuid(),
-                "numeroContrato", contratoActualizado.getNumeroContrato(),
-                "objetivo", contratoActualizado.getObjetivo()
-            ));
+            // Combinar estadísticas
+            Map<String, Object> response = new HashMap<>();
+            response.putAll(estadisticas);
+            response.putAll(estadisticasZonas);
             
-            log.info("✅ Contrato actualizado: {}", contratoActualizado.getNumeroContrato());
             return ResponseEntity.ok(response);
-            
         } catch (Exception e) {
-            log.error("❌ Error al actualizar contrato: ", e);
-            response.put("success", false);
-            response.put("message", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            return ResponseEntity.badRequest().body(Map.of(
+                "success", false,
+                "message", e.getMessage()
+            ));
         }
     }
 
-    @GetMapping("/api/{uuid}")
+    @GetMapping("/{uuid}/predios")
     @ResponseBody
-    public ResponseEntity<ContratoDTO> obtenerPorUuid(@PathVariable UUID uuid,
-                                                    @AuthenticationPrincipal Usuario usuarioActual) {
-        log.info("=== OBTENIENDO CONTRATO: {} ===", uuid);
-        log.info("Usuario: {} ({})", usuarioActual.getUsername(), usuarioActual.getPerfil());
+    public ResponseEntity<List<Map<String, Object>>> obtenerPrediosContrato(@PathVariable UUID uuid,
+                                                                            @AuthenticationPrincipal Usuario usuarioActual) {
+        log.info("=== OBTENIENDO PREDIOS DEL CONTRATO: {} ===", uuid);
         
         try {
             Contrato contrato = contratoService.buscarPorUuid(uuid);
             
-            // Verificar permisos
             if (!tienePermisoVerContrato(usuarioActual, contrato)) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
             
-            // Construir DTO con todos los datos necesarios para edición
-            ContratoDTO dto = ContratoDTO.builder()
-                .uuid(contrato.getUuid())
-                .codigo(contrato.getNumeroContrato())
-                .objetivo(contrato.getObjetivo())
-                .fechaInicio(contrato.getFechaInicio())
-                .fechaFin(contrato.getFechaFin())
-                .estado(contrato.getEstado())
-                
-                // IMPORTANTE: Incluir UUIDs para edición
-                .zonaUuid(contrato.getZona() != null ? contrato.getZona().getUuid() : null)
-                .zonaNombre(contrato.getZona() != null ? contrato.getZona().getNombre() : null)
-                
-                .planTarifaUuid(contrato.getPlanTarifa() != null ? contrato.getPlanTarifa().getUuid() : null)
-                .planTarifaNombre(contrato.getNombrePlanTarifa())
-                
-                .supervisorUuid(contrato.getSupervisor() != null ? contrato.getSupervisor().getUuid() : null)
-                .supervisorNombre(contrato.getNombreSupervisor())
-                
-                .build();
+            List<ContratoPredio> prediosContrato = contratoService.obtenerPrediosDelContrato(uuid);
             
-            // Agregar coordinadores si existen
-            if (contrato.getCoordinadores() != null && !contrato.getCoordinadores().isEmpty()) {
-                dto.setCoordinadorUuids(
-                    contrato.getCoordinadores().stream()
-                        .map(Usuario::getUuid)
-                        .collect(Collectors.toList())
-                );
-            }
+            List<Map<String, Object>> prediosInfo = prediosContrato.stream().map(cp -> {
+                Map<String, Object> info = new HashMap<>();
+                info.put("uuid", cp.getPredio().getUuid());
+                info.put("direccion", cp.getPredio().getDireccion());
+                info.put("codigoCatastral", cp.getPredio().getCodigoCatastral());
+                info.put("tipo", cp.getPredio().getTipo());
+                info.put("estado", cp.getEstado());
+                
+                // Verificar si tiene operario asignado
+                Optional<PredioOperario> predioOperario = predioOperarioRepository
+                    .findByPredioAndContratoAndActivoTrue(cp.getPredio(), cp.getContrato());
+                
+                if (predioOperario.isPresent()) {
+                    Usuario operario = predioOperario.get().getOperario();
+                    info.put("operarioAsignado", operario.getNombre() + " " + operario.getApellido());
+                    info.put("operarioUuid", operario.getUuid());
+                } else {
+                    info.put("operarioAsignado", null);
+                    info.put("operarioUuid", null);
+                }
+                
+                return info;
+            }).collect(Collectors.toList());
             
-            // Agregar estadísticas
-            Map<String, Object> estadisticas = contratoService.obtenerEstadisticas(contrato);
-            dto.setTotalPredios(((Number) estadisticas.get("totalPredios")).intValue());
-            dto.setPrediosAsignados(((Number) estadisticas.get("prediosAsignados")).intValue());
-            dto.setPuedeSerEliminado(contrato.puedeSerEditado());
-            
-            log.info("✅ Contrato encontrado: {}", contrato.getNumeroContrato());
-            return ResponseEntity.ok(dto);
+            return ResponseEntity.ok(prediosInfo);
             
         } catch (Exception e) {
-            log.error("❌ Error al obtener contrato: ", e);
+            log.error("❌ Error al obtener predios del contrato: ", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
-    @PatchMapping("/{uuid}/estado")
+
+    // ==================== GESTIÓN DE ESTADO ====================
+
+    @PatchMapping("/api/{uuid}/estado")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> cambiarEstado(@PathVariable UUID uuid,
                                                             @RequestBody Map<String, String> payload,
@@ -662,6 +790,11 @@ public class ContratoController {
         try {
             Contrato contrato = contratoService.buscarPorUuid(uuid);
             
+            if (!tienePermisoEditarContrato(usuarioActual, contrato)) {
+                response.put("success", false);
+                response.put("message", "No tiene permisos para cambiar el estado del contrato");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+            }
             
             String estadoStr = payload.get("estado");
             EstadoContrato nuevoEstado = EstadoContrato.valueOf(estadoStr);
@@ -683,10 +816,10 @@ public class ContratoController {
         }
     }
 
-    @DeleteMapping("/{uuid}")
+    @DeleteMapping("/api/{uuid}")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> eliminar(@PathVariable UUID uuid,
-                                                    @AuthenticationPrincipal Usuario usuarioActual) {
+                                                        @AuthenticationPrincipal Usuario usuarioActual) {
         log.info("=== ELIMINANDO CONTRATO: {} ===", uuid);
         log.info("Usuario: {} ({})", usuarioActual.getUsername(), usuarioActual.getPerfil());
         
@@ -718,50 +851,226 @@ public class ContratoController {
         }
     }
 
-    @GetMapping("/{uuid}/predios")
+    // ==================== MÉTODOS DE VALIDACIÓN DE PERMISOS (ACTUALIZADOS) ====================
+
+    private boolean tienePermisoVerContrato(Usuario usuario, Contrato contrato) {
+        switch (usuario.getPerfil()) {
+            case ADMINISTRADOR:
+                return true;
+            case SUPERVISOR:
+                return contrato.getSupervisor() != null && 
+                       contrato.getSupervisor().getId().equals(usuario.getId());
+            case COORDINADOR:
+                // ACTUALIZADO: Verificar si es coordinador en alguna zona del contrato
+                List<ContratoZona> zonasCoordinador = contratoService.buscarZonasPorCoordinador(usuario);
+                return zonasCoordinador.stream()
+                    .anyMatch(zona -> zona.getContrato().getUuid().equals(contrato.getUuid()));
+            case OPERARIO:
+                // Los operarios pueden ver contratos donde tienen predios asignados
+                return contratoService.listarContratoPorOperario(usuario).stream()
+                    .anyMatch(c -> c.getUuid().equals(contrato.getUuid()));
+            default:
+                return false;
+        }
+    }
+
+    private boolean tienePermisoEditarContrato(Usuario usuario, Contrato contrato) {
+        // Solo ADMIN y SUPERVISOR del contrato pueden editar
+        return usuario.getPerfil() == PerfilUsuario.ADMINISTRADOR ||
+               (usuario.getPerfil() == PerfilUsuario.SUPERVISOR && 
+                contrato.getSupervisor() != null && 
+                contrato.getSupervisor().getId().equals(usuario.getId()));
+    }
+
+    private boolean tienePermisoParaAsignar(Usuario usuario, Contrato contrato) {
+        return usuario.getPerfil() == PerfilUsuario.ADMINISTRADOR ||
+               (usuario.getPerfil() == PerfilUsuario.SUPERVISOR && 
+                contrato.getSupervisor() != null && 
+                contrato.getSupervisor().getId().equals(usuario.getId())) ||
+               (usuario.getPerfil() == PerfilUsuario.COORDINADOR &&
+                esCoordinadorDelContrato(usuario, contrato));
+    }
+
+    private boolean puedeGestionarZonas(Usuario usuario, Contrato contrato) {
+        // Solo ADMIN y SUPERVISOR del contrato pueden gestionar zonas
+        return usuario.getPerfil() == PerfilUsuario.ADMINISTRADOR ||
+               (usuario.getPerfil() == PerfilUsuario.SUPERVISOR && 
+                contrato.getSupervisor() != null && 
+                contrato.getSupervisor().getId().equals(usuario.getId()));
+    }
+
+    private boolean puedeAsignarCoordinador(Usuario usuario, Contrato contrato) {
+        // Solo ADMIN y SUPERVISOR del contrato pueden asignar coordinadores
+        return usuario.getPerfil() == PerfilUsuario.ADMINISTRADOR ||
+               (usuario.getPerfil() == PerfilUsuario.SUPERVISOR && 
+                contrato.getSupervisor() != null && 
+                contrato.getSupervisor().getId().equals(usuario.getId()));
+    }
+
+    private boolean puedeAsignarOperario(Usuario usuario, Contrato contrato) {
+        if (usuario.getPerfil() == PerfilUsuario.ADMINISTRADOR) return true;
+        
+        if (usuario.getPerfil() == PerfilUsuario.SUPERVISOR && 
+            contrato.getSupervisor() != null && 
+            contrato.getSupervisor().getId().equals(usuario.getId())) {
+            return true;
+        }
+        
+        if (usuario.getPerfil() == PerfilUsuario.COORDINADOR) {
+            return esCoordinadorDelContrato(usuario, contrato);
+        }
+        
+        return false;
+    }
+
+    // NUEVO: Método para verificar si un usuario es coordinador en alguna zona del contrato
+    private boolean esCoordinadorDelContrato(Usuario usuario, Contrato contrato) {
+        List<ContratoZona> zonasCoordinador = contratoService.buscarZonasPorCoordinador(usuario);
+        return zonasCoordinador.stream()
+            .anyMatch(zona -> zona.getContrato().getUuid().equals(contrato.getUuid()));
+    }
+
+    // ==================== ENDPOINTS ADICIONALES PARA ZONAS ====================
+
+    @GetMapping("/api/zonas-sin-coordinador/{contratoUuid}")
     @ResponseBody
-    public ResponseEntity<List<Map<String, Object>>> obtenerPrediosContrato(@PathVariable UUID uuid,
-                                                                            @AuthenticationPrincipal Usuario usuarioActual) {
-        log.info("=== OBTENIENDO PREDIOS DEL CONTRATO: {} ===", uuid);
+    public ResponseEntity<?> obtenerZonasSinCoordinador(@PathVariable UUID contratoUuid,
+                                                       @AuthenticationPrincipal Usuario usuarioActual) {
+        
+        Contrato contrato = contratoService.buscarPorUuid(contratoUuid);
+        
+        if (!tienePermisoVerContrato(usuarioActual, contrato)) {
+            return ResponseEntity.status(403).body(Map.of(
+                "success", false,
+                "message", "No tiene permisos para ver este contrato"
+            ));
+        }
         
         try {
-            Contrato contrato = contratoService.buscarPorUuid(uuid);
+            List<ContratoZona> zonasSinCoordinador = contratoService.buscarZonasSinCoordinador(contratoUuid);
             
-            // Verificar permisos
-            if (!tienePermisoVerContrato(usuarioActual, contrato)) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-            }
-            
-            List<ContratoPredio> prediosContrato = contratoService.obtenerPrediosDelContrato(uuid);
-            
-            List<Map<String, Object>> prediosInfo = prediosContrato.stream().map(cp -> {
+            List<Map<String, Object>> zonasInfo = zonasSinCoordinador.stream().map(zona -> {
                 Map<String, Object> info = new HashMap<>();
-                info.put("uuid", cp.getPredio().getUuid());
-                info.put("direccion", cp.getPredio().getDireccion());
-                info.put("codigoCatastral", cp.getPredio().getCodigoCatastral());
-                info.put("tipo", cp.getPredio().getTipo());
-                info.put("estado", cp.getEstado());
-                
-                // Verificar si tiene operario asignado
-                Optional<PredioOperario> predioOperario = predioOperarioRepository.findByPredioAndContratoAndActivoTrue(cp.getPredio(), cp.getContrato());
-                
-                if (predioOperario.isPresent()) {
-                    Usuario operario = predioOperario.get().getOperario();
-                    info.put("operarioAsignado", operario.getNombre() + " " + operario.getApellido());
-                    info.put("operarioUuid", operario.getUuid());
-                } else {
-                    info.put("operarioAsignado", null);
-                    info.put("operarioUuid", null);
-                }
-                
+                info.put("uuid", zona.getUuid());
+                info.put("zonaNombre", zona.getNombreZona());
+                info.put("planTarifaNombre", zona.getNombrePlanTarifa());
+                info.put("estado", zona.getEstado());
+                info.put("tieneCoordinadorZona", zona.tieneCoordinadorZona());
+                info.put("tieneCoordinadorOperativo", zona.tieneCoordinadorOperativo());
                 return info;
             }).collect(Collectors.toList());
             
-            return ResponseEntity.ok(prediosInfo);
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "zonas", zonasInfo
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "success", false,
+                "message", e.getMessage()
+            ));
+        }
+    }
+
+    @GetMapping("/api/coordinador/{coordinadorUuid}/disponibilidad")
+    @ResponseBody
+    public ResponseEntity<?> verificarDisponibilidadCoordinador(@PathVariable UUID coordinadorUuid,
+                                                              @RequestParam String fechaInicio,
+                                                              @RequestParam String fechaFin,
+                                                              @AuthenticationPrincipal Usuario usuarioActual) {
+        
+        // Solo ADMIN y SUPERVISORES pueden verificar disponibilidad
+        if (usuarioActual.getPerfil() != PerfilUsuario.ADMINISTRADOR && 
+            usuarioActual.getPerfil() != PerfilUsuario.SUPERVISOR) {
+            return ResponseEntity.status(403).body(Map.of(
+                "success", false,
+                "message", "No tiene permisos para esta consulta"
+            ));
+        }
+        
+        try {
+            java.time.LocalDate fechaInicioLD = java.time.LocalDate.parse(fechaInicio);
+            java.time.LocalDate fechaFinLD = java.time.LocalDate.parse(fechaFin);
+            
+            boolean disponible = contratoService.verificarDisponibilidadCoordinador(
+                coordinadorUuid, fechaInicioLD, fechaFinLD);
+            
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "disponible", disponible,
+                "message", disponible ? "Coordinador disponible" : "Coordinador no disponible en estas fechas"
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "success", false,
+                "message", e.getMessage()
+            ));
+        }
+    }
+
+    // ==================== ENDPOINTS PARA FORMULARIOS WEB ====================
+
+    @PostMapping("/guardar")
+    public String guardarContrato(@Valid @ModelAttribute ContratoDTO contratoDTO,
+                                 @AuthenticationPrincipal Usuario usuarioActual,
+                                 Model model) {
+        
+        try {
+            if (contratoDTO.getUuid() == null) {
+                // Crear nuevo contrato
+                if (usuarioActual.getPerfil() != PerfilUsuario.ADMINISTRADOR) {
+                    model.addAttribute("error", "No tiene permisos para crear contratos");
+                    return "admin/contrato-form";
+                }
+                contratoService.crear(contratoDTO);
+                model.addAttribute("success", "Contrato creado exitosamente");
+            } else {
+                // Actualizar contrato existente
+                Contrato contrato = contratoService.buscarPorUuid(contratoDTO.getUuid());
+                if (!tienePermisoEditarContrato(usuarioActual, contrato)) {
+                    model.addAttribute("error", "No tiene permisos para editar este contrato");
+                    return "admin/contrato-form";
+                }
+                contratoService.actualizar(contratoDTO.getUuid(), contratoDTO);
+                model.addAttribute("success", "Contrato actualizado exitosamente");
+            }
+            
+            return "redirect:/admin/contratos";
             
         } catch (Exception e) {
-            log.error("❌ Error al obtener predios del contrato: ", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            log.error("Error al guardar contrato: ", e);
+            model.addAttribute("error", e.getMessage());
+            model.addAttribute("contratoDTO", contratoDTO);
+            
+            // Recargar listas para el formulario
+            model.addAttribute("supervisoresDisponibles", usuarioService.findSupervisoresActivos());
+            model.addAttribute("zonasDisponibles", zonaService.listarActivas());
+            model.addAttribute("planesTarifaDisponibles", planTarifaService.listarActivos());
+            model.addAttribute("coordinadoresDisponibles", usuarioService.findCoordinadoresActivos());
+            
+            return "admin/contrato-form";
         }
-    }    
-}  
+    }
+
+    // ==================== MÉTODOS DE UTILIDAD ====================
+
+    private Map<String, Object> crearRespuestaError(String mensaje) {
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", false);
+        response.put("message", mensaje);
+        return response;
+    }
+
+    private Map<String, Object> crearRespuestaExito(String mensaje) {
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("message", mensaje);
+        return response;
+    }
+
+    private Map<String, Object> crearRespuestaExito(String mensaje, Object data) {
+        Map<String, Object> response = crearRespuestaExito(mensaje);
+        response.put("data", data);
+        return response;
+    }
+}

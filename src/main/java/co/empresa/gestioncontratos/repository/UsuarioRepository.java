@@ -27,6 +27,7 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     
     // Búsquedas por perfil
     List<Usuario> findByPerfilAndActivoTrue(PerfilUsuario perfil);
+
     Page<Usuario> findByPerfilAndActivoTrue(PerfilUsuario perfil, Pageable pageable);
     
     // Búsquedas con filtros
@@ -61,4 +62,20 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     // Operarios para asignación
     @Query("SELECT u FROM Usuario u WHERE u.perfil = 'OPERARIO' AND u.activo = true ORDER BY u.nombre, u.apellido")
     List<Usuario> findOperariosActivos();
+
+    @Query("SELECT u FROM Usuario u WHERE u.perfil = :perfil AND u.activo = true " +
+        "ORDER BY u.nombre ASC")
+    Page<Usuario> findByPerfilAndActivoPage(@Param("perfil") PerfilUsuario perfil, Pageable pageable);
+
+    @Query("SELECT u FROM Usuario u WHERE u.activo = true " +
+        "ORDER BY u.nombre ASC")
+    List<Usuario> findByActivoTrueOrderByNombreCompleto();
+    
+    Optional<Usuario> findByEmail(String email);
+    Optional<Usuario> findByUsername(String username);
+
+    boolean existsByEmail(String email);
+    boolean existsByUsername(String username);
+    boolean existsByEmailAndIdNot(String email, Long id);
+    boolean existsByUsernameAndIdNot(String username, Long id);
 }

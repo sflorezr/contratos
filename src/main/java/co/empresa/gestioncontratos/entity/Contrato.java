@@ -44,9 +44,15 @@ public class Contrato {
     @Column(name = "fecha_fin", nullable = false)
     private LocalDate fechaFin;
 
+
+    
     @NotBlank
     @Column(nullable = false, columnDefinition = "TEXT")
     private String objetivo;
+
+    @NotBlank
+    @Column(nullable = true, columnDefinition = "TEXT")
+    private String empresaContratante;
 
     @Builder.Default
     @Enumerated(EnumType.STRING)
@@ -72,12 +78,6 @@ public class Contrato {
     // Relación existente con predios (se mantiene)
     @OneToMany(mappedBy = "contrato", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<ContratoPredio> contratoPredios;
-
-    // ELIMINADAS: 
-    // - zona (ManyToOne)
-    // - planTarifa (ManyToOne) 
-    // - coordinadores (ManyToMany)
-    // - contratoCoordinadores (OneToMany)
 
     @PrePersist
     public void prePersist() {

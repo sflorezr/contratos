@@ -270,18 +270,15 @@ public class SectorService {
     public SectorDTO convertirADTO(Sector sector) {
         return SectorDTO.builder()
             .uuid(sector.getUuid())
-            .nombre(sector.getNombre())
             .codigo(sector.getCodigo())
+            .nombre(sector.getNombre())
             .descripcion(sector.getDescripcion())
-            .limiteNorte(sector.getLimiteNorte())
-            .limiteSur(sector.getLimiteSur())
-            .limiteEste(sector.getLimiteEste())
-            .limiteOeste(sector.getLimiteOeste())
-            .area(sector.getArea())
-            .poblacion(sector.getPoblacion())
             .activo(sector.getActivo())
+            .zonaId(sector.getZona().getId())
+            .zonaNombre(sector.getZona().getNombre())
             .build();
     }
+
 
     private String generarCodigo(String nombre) {
         // Generar código basado en las primeras 3 letras del nombre

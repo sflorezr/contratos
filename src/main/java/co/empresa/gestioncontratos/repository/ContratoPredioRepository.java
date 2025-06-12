@@ -40,4 +40,16 @@ public interface ContratoPredioRepository extends JpaRepository<ContratoPredio, 
     long countByContratoAndActivoTrue(Contrato contrato);
     
     long countByContratoAndEstado(Contrato contrato, EstadoPredio estado);
+
+
+    List<ContratoPredio> findByContratoOrderByFechaCreacionAsc(Contrato contrato);
+
+
+    boolean existsByContratoAndPredioAndActivoTrue(Contrato contrato, Predio predio);
+
+    @Query("SELECT cp FROM ContratoPredio cp WHERE cp.contrato = :contrato " +
+        "AND cp.estado = :estado AND cp.activo = true " +
+        "ORDER BY cp.fechaCreacion ASC")
+    List<ContratoPredio> findByContratoAndEstadoAndActivoTrue(@Param("contrato") Contrato contrato, 
+                                                            @Param("estado") EstadoPredio estado);
 }

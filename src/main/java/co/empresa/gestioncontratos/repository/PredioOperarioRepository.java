@@ -62,4 +62,11 @@ public interface PredioOperarioRepository extends JpaRepository<PredioOperario, 
     
     // Verificar si existe asignación para un predio en un contrato
     boolean existsByPredioAndContratoAndActivoTrue(Predio predio, Contrato contrato);
+
+
+@Query("SELECT DISTINCT po.operario FROM PredioOperario po WHERE po.contrato = :contrato " +
+       "AND po.activo = true ORDER BY po.operario.nombre")
+List<Usuario> findOperariosByContratoDistinct(@Param("contrato") Contrato contrato);
+
+
 }

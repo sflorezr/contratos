@@ -24,7 +24,7 @@
         <div class="header-bar">
             <div>
                 <h4 class="mb-0">Gestión de Contratos</h4>
-                <small class="text-muted">Administrar contratos y asignaciones</small>
+                <small class="text-muted">Administrar contratos y asignaciones por zonas</small>
             </div>
             <div class="d-flex align-items-center">
                 <button class="btn btn-gradient btn-sm me-3" id="btnNewContract">
@@ -166,30 +166,18 @@
                                     <div class="form-text">Solo letras mayúsculas, números y guiones</div>
                                 </div>
                                 <div class="col-md-4">
-                                    <label class="form-label">Zona <span class="text-danger">*</span></label>
-                                    <select class="form-select" id="zonaUuid" name="zonaUuid" required>
-                                        <option value="">Seleccionar zona...</option>
-                                    </select>
+                                    <label class="form-label">Fecha Inicio <span class="text-danger">*</span></label>
+                                    <input type="date" class="form-control" id="fechaInicio" name="fechaInicio"
+                                        required>
                                 </div>
                                 <div class="col-md-4">
-                                    <label class="form-label">Plan de Tarifa <span class="text-danger">*</span></label>
-                                    <select class="form-select" id="planTarifaUuid" name="planTarifaUuid" required>
-                                        <option value="">Seleccionar plan...</option>
-                                    </select>
+                                    <label class="form-label">Fecha Fin <span class="text-danger">*</span></label>
+                                    <input type="date" class="form-control" id="fechaFin" name="fechaFin" required>
                                 </div>
                                 <div class="col-12">
                                     <label class="form-label">Objetivo <span class="text-danger">*</span></label>
                                     <textarea class="form-control" id="objetivo" name="objetivo" rows="3" required
                                         placeholder="Descripción del objetivo del contrato..."></textarea>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Fecha Inicio <span class="text-danger">*</span></label>
-                                    <input type="date" class="form-control" id="fechaInicio" name="fechaInicio"
-                                        required>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Fecha Fin <span class="text-danger">*</span></label>
-                                    <input type="date" class="form-control" id="fechaFin" name="fechaFin" required>
                                 </div>
                             </div>
                         </div>
@@ -217,26 +205,23 @@
                             </div>
                         </div>
 
-                        <!-- Predios (solo en edición) -->
-                        <div class="form-section d-none" id="prediosSection">
-                            <h6 class="mb-3"><i class="fas fa-map-marker-alt me-2"></i>Predios Asignados</h6>
-                            <div class="row">
-                                <div class="col-md-8">
-                                    <div class="predios-list" id="prediosAsignados">
-                                        <!-- Se cargan dinámicamente -->
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <button type="button" class="btn btn-outline-primary w-100 mb-2"
-                                        id="btnAgregarPredios">
-                                        <i class="fas fa-plus me-2"></i>Agregar Predios
-                                    </button>
-                                    <div class="text-muted small">
-                                        <p class="mb-1">Total predios: <strong id="totalPredios">0</strong></p>
-                                        <p class="mb-1">Asignados: <strong id="prediosAsignadosCount">0</strong></p>
-                                        <p class="mb-0">Sin asignar: <strong id="prediosSinAsignarCount">0</strong></p>
-                                    </div>
-                                </div>
+                        <!-- Zonas del Contrato -->
+                        <div class="form-section">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-layer-group me-2"></i>Zonas del Contrato
+                                    <span class="text-danger">*</span>
+                                </h6>
+                                <button type="button" class="btn btn-sm btn-outline-primary" id="btnGestionarZonas">
+                                    <i class="fas fa-cog me-1"></i>Gestionar Zonas
+                                </button>
+                            </div>
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-1"></i>
+                                <strong>Nuevo:</strong> Cada contrato puede tener múltiples zonas, cada una con su plan de tarifa y coordinadores específicos.
+                            </div>
+                            <div id="zonasSeleccionadas">
+                                <p class="text-muted">No se han seleccionado zonas</p>
                             </div>
                         </div>
                     </form>
@@ -244,7 +229,78 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <button type="button" class="btn btn-gradient" id="saveContratoBtn">
-                        <i class="fas fa-save me-2"></i>Guardar
+                        <i class="fas fa-save me-2"></i>Guardar Contrato
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Gestión de Zonas -->
+    <div class="modal fade" id="modalZonas" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-layer-group me-2"></i>Gestionar Zonas del Contrato
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Formulario para agregar zona -->
+                    <div class="border rounded p-3 mb-4 bg-light">
+                        <h6 class="mb-3">
+                            <i class="fas fa-plus-circle me-2"></i>Agregar Nueva Zona
+                        </h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Zona <span class="text-danger">*</span></label>
+                                <select class="form-select" id="zonaSelect">
+                                    <option value="">Seleccionar zona...</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Plan de Tarifa <span class="text-danger">*</span></label>
+                                <select class="form-select" id="planTarifaSelect">
+                                    <option value="">Seleccionar plan...</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Coordinador de Zona</label>
+                                <select class="form-select" id="coordinadorZonaSelect">
+                                    <option value="">Sin asignar</option>
+                                </select>
+                                <div class="form-text">Gestiona la zona específica</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Coordinador Operativo</label>
+                                <select class="form-select" id="coordinadorOperativoSelect">
+                                    <option value="">Sin asignar</option>
+                                </select>
+                                <div class="form-text">Gestiona operaciones diarias</div>
+                            </div>
+                            <div class="col-12">
+                                <button type="button" class="btn btn-success" id="btnAgregarZona">
+                                    <i class="fas fa-plus me-1"></i>Agregar Zona
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Lista de zonas seleccionadas -->
+                    <div>
+                        <h6 class="mb-3">
+                            <i class="fas fa-list me-2"></i>Zonas Configuradas
+                        </h6>
+                        <div id="zonasSeleccionadasModal">
+                            <p class="text-muted">No se han seleccionado zonas</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="btnGuardarZonas">
+                        <i class="fas fa-save me-1"></i>Guardar Zonas
                     </button>
                 </div>
             </div>
@@ -254,6 +310,7 @@
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/js/contratos.js"></script>
+
 </body>
 
 </html>

@@ -1,5 +1,6 @@
 package co.empresa.gestioncontratos.repository;
 
+import co.empresa.gestioncontratos.dto.SectorDTO;
 import co.empresa.gestioncontratos.entity.Sector;
 import co.empresa.gestioncontratos.entity.Zona;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -45,16 +46,16 @@ public interface SectorRepository extends JpaRepository<Sector, Long> {
     long countSectoresConPredios();
     
     @Query("SELECT COUNT(s) FROM Sector s " +
-           "WHERE s.zona.id = (SELECT c.zona.id FROM Contrato c WHERE c.id = :contratoId)")
+           "WHERE s.zona.id = (SELECT c.zona.id FROM ContratoZona c WHERE c.id = :contratoId)")
     long countSectoresPorContrato(@Param("contratoId") Long contratoId);
 
     @Query("SELECT COUNT(DISTINCT s) FROM Sector s " +
-           "WHERE EXISTS (SELECT c FROM Contrato c WHERE c.zona = s.zona)")
+           "WHERE EXISTS (SELECT c FROM ContratoZona c WHERE c.zona = s.zona)")
     long countSectoresConContratos();
     
     @Query("SELECT COUNT(s) FROM Sector s " +
            "WHERE NOT EXISTS (SELECT p FROM Predio p WHERE p.sector = s) " +
-           "AND NOT EXISTS (SELECT c FROM Contrato c WHERE c.zona = s.zona)")
+           "AND NOT EXISTS (SELECT cz FROM ContratoZona cz WHERE cz.zona = s.zona)")
     long countSectoresSinActividad();
 
     // Contar predios por zona
@@ -94,4 +95,13 @@ public interface SectorRepository extends JpaRepository<Sector, Long> {
     
     @Query("SELECT CASE WHEN COUNT(s) > 0 THEN true ELSE false END FROM Sector s WHERE s.uuid = :sectorUuid AND s.zona.uuid = :zonaUuid")
     boolean perteneceAZona(@Param("sectorUuid") UUID sectorUuid, @Param("zonaUuid") UUID zonaUuid);
+
+       @Query("SELECT COUNT(s) FROM Sector s WHERE s.zona.id = :zonaId")
+       long contarSectoresPorZona(@Param("zonaId") Long zonaId);
+
+       @Query("SELECT COUNT(s) FROM Sector s WHERE s.zona.id = :zonaId AND s.activo = true")
+       long contarSectoresActivosPorZona(@Param("zonaId") Long zonaId);
+
+       @Query("SELECT s FROM Sector s WHERE s.zona = :zona ORDER BY s.nombre ASC")
+       List<Sector> findByZonaOrderByOrdenAscNombreAsc(@Param("zona") Zona zona);
 }
